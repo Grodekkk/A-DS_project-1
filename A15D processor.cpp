@@ -2,6 +2,19 @@
 
 using namespace std;
 
+//==============TO DO LIST=================================================
+/*
+* GENERAL CODE CLEANING, THIS IS A MESS
+* AMPERSAND PRINTING, OF COURSE IT DOESN'T WORK THAT EASY
+
+
+
+
+
+
+*/
+//==============================================================================
+
 //program memory and instruction pointer
 char program_mem[20000];
 char *mem_ptr = program_mem;
@@ -27,7 +40,7 @@ struct ListElement
 //===================================== STACK DATA & FUNCTIONS ============================================================================
 //this struct is a single stack element
     
-int stackCounter = 0;                                   //shows current elements on stack, no elements and one elements count as zero need to be aware of that
+int stackCounter = -1;                                   //shows current elements on stack, no elements and one elements count as zero need to be aware of that
 struct StackField 
 {
     List value;
@@ -92,7 +105,7 @@ void printList(ListElement* listIterator)
 }
 
 //this will be '&' function, print entire content of stack.
-void show(StackField* currentStackField)
+void show(StackField* currentStackField, int Counter)
 {
     //cout << stack_ptr->value << "<-- top stack value]]" << endl;
     if (stack_ptr == nullptr)
@@ -100,23 +113,36 @@ void show(StackField* currentStackField)
         cout << "emptystack" << endl;
         return;
     }
-    //todo number od the stack
-
-    //this propably cannot be here
     
+    cout << Counter << ": ";
 
-    //is it correct place for this???
     ListElement* listIterator = currentStackField->value.startOfList; //list iterator start at beggining of list at current stack level
+
+    //
     if (currentStackField->previous_element == nullptr)
     {
+        if (listIterator == nullptr)
+        {
+            cout << endl;
+            return;
+        }
         printList(listIterator);            //print list on this stack field
         return;
     }
     else
     {
-        printList(listIterator);                                        //print current list
+        if (listIterator != nullptr)
+        {
+            printList(listIterator);
+        }
+        else
+        {
+            cout << endl;
+        }
+                                               //print current list
         currentStackField = currentStackField->previous_element;        //change pointer to one layer lower
-        show(currentStackField);                                        //do it once again until there is nothing under
+        Counter--;
+        show(currentStackField, Counter);                                        //do it once again until there is nothing under
 
     }
     //everything works by far, we just dont have the "recursion here" 
@@ -145,7 +171,7 @@ int main()
         switch(mem_ptr[ptr_value])
         {
         
-            case '`'://push empty list on the stack
+            case '\''://push empty list on the stack
                 {
                     List* newList = new List;
                     newList->startOfList = nullptr;         //list is empty so it points nowhere
@@ -157,8 +183,9 @@ int main()
         
             case '&':
                 {
+                    int stackCpy = stackCounter;
                     StackField* currentStackField = stack_ptr;   //our inside pointer that will iterate thru all stack
-                    show(currentStackField);
+                    show(currentStackField, stackCpy);
                     ptr_value++;
                     break;
                 }
@@ -179,6 +206,10 @@ int main()
                     ptr_value++;
                     break;
                 }
+            default:
+            {
+                ptr_value++;
+            }
                 
 
         }
