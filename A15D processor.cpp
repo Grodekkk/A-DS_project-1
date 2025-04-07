@@ -263,10 +263,64 @@ void pop()
     stackCounter--;
 }
 
+//returns a number of fields in list, second argument must be 1, need to think how to redo this
+int getListCount(ListElement* listSearched, int listSize)
+{
+    if (listSearched->nextListItem == nullptr)
+    {
+        return listSize;
+    }
+                          //also dlaczego nie dziala tutaj listSize++, a (listSize + 1) już tak   
+    getListCount(listSearched->nextListItem, (listSize + 1));
+}
+
+//returns contents of a list as an integer [helper]
+int sumUpList(ListElement* listSearched, int listSize, int listSum)
+{
+    //listSearched -> beggining of our list
+    //listSize -> number of numbers in the list
+    //listSum -> numerical value of our list, will be returned, maybe we should pass it as 0
+
+    int firstStep = listSearched->value - 48;
+    int secondStep = pow(10, (listSize - 1));
+
+    listSum = listSum + firstStep * secondStep;
+
+    if (listSearched->nextListItem == nullptr)
+    {
+        return listSum;
+    }
+
+    sumUpList(listSearched->nextListItem, (listSize - 1), (listSum));
+}
+
+//returns contents of a list as an integer [main]
+int readListToInt()
+{
+    
+    int listSize = getListCount(stack_ptr->value.startOfList, 1);
+    int numValue = sumUpList(stack_ptr->value.startOfList, listSize, 0);
+    return numValue;
+}
+
+//will perform '@' action of copying number on stack and then copying list on stack
 void popAndSwitch()
 {
 
 }
+
+void readStackChars(ListElement* listSearched)
+{
+    if (listSearched->nextListItem == nullptr)
+    {
+        cout << listSearched->value;
+        return;
+    }
+    cout << listSearched->value;
+    readStackChars(listSearched->nextListItem);
+}
+
+
 
 int main()
 {
@@ -318,7 +372,11 @@ int main()
             }
             case '@':
             {
-
+                //test dlugosci listy
+                cout << "liczba na stosie [INT]: " << readListToInt() << endl;
+                cout << "liczba na stosie [CHAR]: ";
+                readStackChars(stack_ptr->value.startOfList);
+                cout << endl;
                 ptr_value++;
                 break;
             }
