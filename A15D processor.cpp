@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 
@@ -105,6 +106,8 @@ void printList(ListElement* listIterator)
 }
 
 //this will be '&' function, print entire content of stack.
+//works "from top to bottom", should be other way around
+/*
 void show(StackField* currentStackField, int Counter)
 {
     //cout << stack_ptr->value << "<-- top stack value]]" << endl;
@@ -148,9 +151,53 @@ void show(StackField* currentStackField, int Counter)
     //everything works by far, we just dont have the "recursion here" 
     
 }
+*/
 
+//trying to do this bottom to top
+void show(StackField* currentStackField, int Counter)
+{
+    if (stack_ptr == nullptr)//error handling
+    {
+        cout << "emptystack" << endl;
+        return;
+    }
 
+    ListElement* listIterator = currentStackField->value.startOfList; //list iterator start at beggining of list at current stack level
+    
+    if (currentStackField->previous_element == nullptr)
+    {
+        if (listIterator == nullptr)
+        {
+            cout << Counter << ": " << endl;
+            return;
+        }
+        cout << Counter << ": ";
+        printList(listIterator);            //print list on this stack field
+        return;
+    }
+    else
+    {
+        
+        //print current list
+        currentStackField = currentStackField->previous_element;        //change pointer to one layer lower
+        // ++ doesn't work need to do this with (ctr+1) as func parameter
+        show(currentStackField, (Counter+1));                                        //do it once again until there is nothing under
 
+        if (listIterator != nullptr)
+        {
+            cout << Counter << ": ";
+            printList(listIterator);
+        }
+        else
+        {
+            cout << Counter << ": ";
+            cout << endl;
+        }
+
+    }
+    //everything works by far, we just dont have the "recursion here" 
+
+}
 
 
 
@@ -183,7 +230,7 @@ int main()
         
             case '&':
                 {
-                    int stackCpy = stackCounter;
+                    int stackCpy = 0; //!!! zamiana z stackCounter
                     StackField* currentStackField = stack_ptr;   //our inside pointer that will iterate thru all stack
                     show(currentStackField, stackCpy);
                     ptr_value++;
