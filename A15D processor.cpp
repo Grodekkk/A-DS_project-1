@@ -263,6 +263,7 @@ void pop()
     stackCounter--;
 }
 
+//function returning size of list
 //returns a number of fields in list, second argument must be 1, need to think how to redo this
 int getListCount(ListElement* listSearched, int listSize)
 {
@@ -271,7 +272,7 @@ int getListCount(ListElement* listSearched, int listSize)
         return listSize;
     }
                           //also dlaczego nie dziala tutaj listSize++, a (listSize + 1) już tak   
-    getListCount(listSearched->nextListItem, (listSize + 1));
+    return getListCount(listSearched->nextListItem, (listSize + 1));
 }
 
 //returns contents of a list as an integer [helper]
@@ -291,7 +292,7 @@ int sumUpList(ListElement* listSearched, int listSize, int listSum)
         return listSum;
     }
 
-    sumUpList(listSearched->nextListItem, (listSize - 1), (listSum));
+    return sumUpList(listSearched->nextListItem, (listSize - 1), (listSum));
 }
 
 //returns contents of a list as an integer [main]
@@ -303,12 +304,69 @@ int readListToInt()
     return numValue;
 }
 
-//will perform '@' action of copying number on stack and then copying list on stack
+//gives pointer to start of the list on -ish position [helper]
+StackField* givePointer(StackField* stackPosition, int counter, int destination)
+{
+    if (counter == destination)
+    {
+        return stackPosition;
+    }
+    return givePointer(stackPosition->previous_element, (counter + 1), destination);
+}
+
+//will perform '@' action of copying number on stack and then copying list on stack [@]
 void popAndSwitch()
 {
+    //read number that is on stack
+    int numberOnStack = readListToInt();
+
+    //remove that list/number from stack
+    pop();
+
+    //copy the number-ish pos of stack to the top
+    
+    
+    //create new list
+    List* newList = new List;
+    newList->startOfList = new ListElement;
+
+    //create new stack field
+    StackField* newField = new StackField;              
+    newField->value = *newList;
+
+    //append new stackfield to the stack
+    if (stack_ptr == nullptr)
+    {
+        newField->previous_element = nullptr;           //first element of stack doesnt have any element below
+    }
+    else
+    {
+        newField->previous_element = stack_ptr;
+    }
+
+    //get pointer to ish position
+    StackField* numPosition = givePointer(stack_ptr, 0, numberOnStack);
+
+    //FIX START
+    //list copying 
+    ListElement* startOfList = newList->startOfList;                    //this is correct
+    // replace stack_ptr->value.startOfList to something else
+    ListElement* startOfStackList = numPosition->value.startOfList;       //this need to be our i-sh field
+    copyStackTopHelper(startOfList, startOfStackList);
+    
+    //FIX STOP
+
+
+    //increase stack size counter
+    stackCounter++;
+
+    //attach new stackField as top of the stack
+    stack_ptr = newField;
+
 
 }
 
+//test function to see if list->int translate function works properly
 void readStackChars(ListElement* listSearched)
 {
     if (listSearched->nextListItem == nullptr)
@@ -372,11 +430,15 @@ int main()
             }
             case '@':
             {
+
+                popAndSwitch();
+                /*
                 //test dlugosci listy
                 cout << "liczba na stosie [INT]: " << readListToInt() << endl;
                 cout << "liczba na stosie [CHAR]: ";
                 readStackChars(stack_ptr->value.startOfList);
                 cout << endl;
+                */
                 ptr_value++;
                 break;
             }
