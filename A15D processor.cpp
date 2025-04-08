@@ -86,12 +86,20 @@ void push(List* newList)
         newField->previous_element = stack_ptr;
     }
     stack_ptr = newField;
+    newField->value.startOfList = nullptr;
     stackCounter++;
 }
 
 //print stack content [helper function]
 void printList(ListElement* listIterator)
 {
+    //again if works this should be moved to the main cause its shitty
+    if (listIterator == nullptr)
+    {
+        cout << endl;        //prints last value and end a function at the end of the list
+        return;
+    }
+    //unknown memory, need to make it null right now its "trash memory" fix it in push
     if (listIterator->nextListItem == nullptr)
     {
         cout << listIterator->value << endl;        //prints last value and end a function at the end of the list
@@ -160,6 +168,11 @@ void copyStackTopHelper(ListElement* startOfList, ListElement* startOfStackList)
 
 
     //if list has reached the end, end recursion
+    //!!!if works this should me moved to the main function
+    if (startOfStackList == nullptr)
+    {
+        return;
+    }
     if (startOfStackList->nextListItem == nullptr)
     {
         startOfList->value = startOfStackList->value;
@@ -188,7 +201,7 @@ void copyStackTop()
     StackField* newField = new StackField;              //we create new stackfield and name it "newField" [TEMPORALY]
     newField->value = *newList;//!!!  [might be incorrect] 
 
-    //append new stackfield to the stack
+    //getting pointers of our stackfield
     if (stack_ptr == nullptr)
     {
         newField->previous_element = nullptr;           //first element of stack doesnt have any element below
@@ -199,10 +212,12 @@ void copyStackTop()
     }
     
     
-
+    //getting values of our stackfield, should do the same check-in here as upward ^^^
+    //check the push if it attaches something
+    
     //list copying mechanic, maybe another function with recursion
     ListElement* startOfList = newList->startOfList;
-    ListElement* startOfStackList = stack_ptr->value.startOfList;
+    ListElement* startOfStackList = stack_ptr->value.startOfList; //seems problematic [tuesday illness day]
     copyStackTopHelper(startOfList, startOfStackList);
     //after everything move stack pointer to the new field
 
@@ -276,31 +291,31 @@ int getListCount(ListElement* listSearched, int listSize)
 }
 
 //returns contents of a list as an integer [helper]
-int sumUpList(ListElement* listSearched, int listSize, int listSum)
+int sumUpList(ListElement* listSearched, int powerOfTen, int returner)
 {
     //listSearched -> beggining of our list
     //listSize -> number of numbers in the list
     //listSum -> numerical value of our list, will be returned, maybe we should pass it as 0
 
     int firstStep = listSearched->value - 48;
-    int secondStep = pow(10, (listSize - 1));
+    int secondStep = pow(10, (powerOfTen));
 
-    listSum = listSum + firstStep * secondStep;
+    returner = returner + firstStep * secondStep;
 
     if (listSearched->nextListItem == nullptr)
     {
-        return listSum;
+        return returner;
     }
 
-    return sumUpList(listSearched->nextListItem, (listSize - 1), (listSum));
+    return sumUpList(listSearched->nextListItem, (powerOfTen +1), (returner));
 }
 
 //returns contents of a list as an integer [main]
 int readListToInt()
 {
     
-    int listSize = getListCount(stack_ptr->value.startOfList, 1);
-    int numValue = sumUpList(stack_ptr->value.startOfList, listSize, 0);
+    int listSize = getListCount(stack_ptr->value.startOfList, 1); //not used because of misinterpretation of list
+    int numValue = sumUpList(stack_ptr->value.startOfList, 0, 0);
     return numValue;
 }
 
@@ -463,65 +478,6 @@ int main()
             {
                 ptr_value++;
             }
-                
-
         }
-            
-
     }
 }
-
-
-
-
-
-
-
-
-//this will be '&' function, print entire content of stack.
-//works "from top to bottom", should be other way around
-/*
-void show(StackField* currentStackField, int Counter)
-{
-    //cout << stack_ptr->value << "<-- top stack value]]" << endl;
-    if (stack_ptr == nullptr)
-    {
-        cout << "emptystack" << endl;
-        return;
-    }
-
-    cout << Counter << ": ";
-
-    ListElement* listIterator = currentStackField->value.startOfList; //list iterator start at beggining of list at current stack level
-
-    //
-    if (currentStackField->previous_element == nullptr)
-    {
-        if (listIterator == nullptr)
-        {
-            cout << endl;
-            return;
-        }
-        printList(listIterator);            //print list on this stack field
-        return;
-    }
-    else
-    {
-        if (listIterator != nullptr)
-        {
-            printList(listIterator);
-        }
-        else
-        {
-            cout << endl;
-        }
-                                               //print current list
-        currentStackField = currentStackField->previous_element;        //change pointer to one layer lower
-        Counter--;
-        show(currentStackField, Counter);                                        //do it once again until there is nothing under
-
-    }
-    //everything works by far, we just dont have the "recursion here"
-
-}
-*/
