@@ -73,10 +73,14 @@ void appendOnList(char value)
 }
 
 //need fixing with lists, checking if works correctly
-void push(List* newList)
+void push()
 {
+    List* newList = new List;
+    newList->startOfList = nullptr;         //list is empty so it points nowhere
+
     StackField* newField = new StackField;              //we create new stackfield and name it "newField" [TEMPORALY]
-    newField->value = *newList;//!!!  [might be incorrect]                          
+    newField->value = *newList;//!!!  [might be incorrect] "shallow copy" ask abt it
+
     if (stack_ptr == nullptr)
     {
         newField->previous_element = nullptr;           //first element of stack doesnt have any element below
@@ -85,8 +89,9 @@ void push(List* newList)
     {
         newField->previous_element = stack_ptr;
     }
+
     stack_ptr = newField;
-    newField->value.startOfList = nullptr;
+    //newField->value.startOfList = nullptr; //its also in the main [code cleaning]
     stackCounter++;
 }
 
@@ -117,16 +122,20 @@ void printList(ListElement* listIterator)
 //print stack content
 void show(StackField* currentStackField, int Counter)
 {
-    if (stack_ptr == nullptr)//error handling
+    //error handling
+    if (stack_ptr == nullptr)
     {
         cout << "emptystack" << endl;
         return;
     }
 
-    ListElement* listIterator = currentStackField->value.startOfList; //list iterator start at beggining of list at current stack level
+    //make pointer to start of the list at this stack field
+    ListElement* listIterator = currentStackField->value.startOfList; 
     
+    //end ofrecursion when we reached end of the stack
     if (currentStackField->previous_element == nullptr)
     {
+        //printing empty list if list is empty
         if (listIterator == nullptr)
         {
             cout << Counter << ": " << endl;
@@ -139,25 +148,22 @@ void show(StackField* currentStackField, int Counter)
     else
     {
         
-        //print current list
-        currentStackField = currentStackField->previous_element;        //change pointer to one layer lower
-        // ++ doesn't work need to do this with (ctr+1) as func parameter
-        show(currentStackField, (Counter+1));                                        //do it once again until there is nothing under
+        //change pointer to one layer lower [recursion]
+        currentStackField = currentStackField->previous_element;        
+        show(currentStackField, (Counter+1));                                        
 
-        if (listIterator != nullptr)
+        //printing empty list if list is empty
+        if (listIterator == nullptr)
         {
             cout << Counter << ": ";
-            printList(listIterator);
+            cout << endl;   
         }
         else
         {
             cout << Counter << ": ";
-            cout << endl;
+            printList(listIterator);
         }
-
     }
-    //everything works by far, we just dont have the "recursion here" 
-
 }
 
 //put a exact copy of list from top on top of an stack [helper function]
@@ -171,6 +177,7 @@ void copyStackTopHelper(ListElement* startOfList, ListElement* startOfStackList)
     //!!!if works this should me moved to the main function
     if (startOfStackList == nullptr)
     {
+        //startOfList = nullptr;
         return;
     }
     if (startOfStackList->nextListItem == nullptr)
@@ -190,18 +197,40 @@ void copyStackTopHelper(ListElement* startOfList, ListElement* startOfStackList)
     copyStackTopHelper(startOfList->nextListItem, startOfStackList->nextListItem);
 }
 
+//Check if Stack top is an emtyy list
+bool isStackTopEmptyList()
+{
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
 //put a exact copy of list from top on top of an stack
 void copyStackTop()
 {
+    //check if StackTop is an emptylist
+    if (isStackTopEmptyList())
+    {
+        push();
+        return;
+    }
+
+
     //create new list
     List* newList = new List;
-    newList->startOfList = new ListElement;
+    newList->startOfList = new ListElement; //this is usually null previously ***new ListElement*** OR ***nullptr*** but without values so it's trash memory
 
     //create new stack field
-    StackField* newField = new StackField;              //we create new stackfield and name it "newField" [TEMPORALY]
-    newField->value = *newList;//!!!  [might be incorrect] 
+    StackField* newField = new StackField;
+    newField->value = *newList;
 
-    //getting pointers of our stackfield
+    //getting pointers of our stackfield, NULL if on bottom previous stackfield if not
     if (stack_ptr == nullptr)
     {
         newField->previous_element = nullptr;           //first element of stack doesnt have any element below
@@ -210,18 +239,21 @@ void copyStackTop()
     {
         newField->previous_element = stack_ptr;
     }
-    
-    
-    //getting values of our stackfield, should do the same check-in here as upward ^^^
-    //check the push if it attaches something
-    
+
+    //if copied list is empty, do not copy it
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+
+    }
+    else
+    {
+        ListElement* startOfList = newList->startOfList;
+        ListElement* startOfStackList = stack_ptr->value.startOfList; 
+        copyStackTopHelper(startOfList, startOfStackList);
+    }
     //list copying mechanic, maybe another function with recursion
-    ListElement* startOfList = newList->startOfList;
-    ListElement* startOfStackList = stack_ptr->value.startOfList; //seems problematic [tuesday illness day]
-    copyStackTopHelper(startOfList, startOfStackList);
+    
     //after everything move stack pointer to the new field
-
-
 
     stackCounter++;
     stack_ptr = newField;
@@ -268,12 +300,32 @@ void deleteStackContent(ListElement* listCleaner)
 //remove item from the stack
 void pop()
 {
+    //error handling
+    if (stack_ptr == nullptr)
+    {
+        return;
+    }
+
     //change pointer to top of the stack to element below
     StackField* cleaner = stack_ptr;
-    stack_ptr = stack_ptr->previous_element;
 
-    ListElement* listCleaner = cleaner->value.startOfList;
-    deleteStackContent(listCleaner);
+    //if this is bottom of a stack, change stack pointer to NULL
+    if (stack_ptr->previous_element == nullptr)
+    {
+        stack_ptr = nullptr;
+    }
+    else
+    {
+        stack_ptr = stack_ptr->previous_element;
+    }
+    
+    //if list is not empty, delete it
+    if (cleaner->value.startOfList != nullptr)
+    {
+        ListElement* listCleaner = cleaner->value.startOfList;
+        deleteStackContent(listCleaner);
+    }
+    
     delete cleaner;
     stackCounter--;
 }
@@ -314,7 +366,7 @@ int sumUpList(ListElement* listSearched, int powerOfTen, int returner)
 int readListToInt()
 {
     
-    int listSize = getListCount(stack_ptr->value.startOfList, 1); //not used because of misinterpretation of list
+    //int listSize = getListCount(stack_ptr->value.startOfList, 1); //not used because of misinterpretation of list
     int numValue = sumUpList(stack_ptr->value.startOfList, 0, 0);
     return numValue;
 }
@@ -407,15 +459,12 @@ int main()
         {
         
             case '\''://push empty list on the stack
-                {
-                    List* newList = new List;
-                    newList->startOfList = nullptr;         //list is empty so it points nowhere
-                    push(newList);
+                {  
+                    push();
                     ptr_value++;
                     break;
                 }
                
-        
             case '&':
                 {
                     int stackCpy = 0; //!!! zamiana z stackCounter
@@ -424,6 +473,7 @@ int main()
                     ptr_value++;
                     break;
                 }
+
             case ':':
             {
                 copyStackTop();
@@ -431,18 +481,21 @@ int main()
                 ptr_value++;
                 break;
             }
+
             case ';':
             {
                 switchLists();
                 ptr_value++;
                 break;
             }
+
             case ',':
             {
                 pop();
                 ptr_value++;
                 break;
             }
+
             case '@':
             {
 
