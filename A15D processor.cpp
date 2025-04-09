@@ -453,6 +453,58 @@ void readAndAppend()
     appendOnList(dotCommand);
 }
 
+//if there is minus on end of the list on StackTop, delete it [helper function] [list longer than 1]
+void absoluteValueLongList(ListElement* stackTopList)
+{  
+    //if next list element is the last, check if pointer needs fixing
+    if (stackTopList->nextListItem->nextListItem == nullptr)
+    {
+        if (stackTopList->nextListItem->value == '-')
+        {
+            //this way because we cannot operate on pointers to deleted memory
+            ListElement* minusListElement = stackTopList->nextListItem;
+            stackTopList->nextListItem = nullptr;
+            delete minusListElement;
+            return;   
+        }
+    }
+    else
+    {
+        absoluteValueLongList(stackTopList->nextListItem);
+    }
+   
+}
+
+//remove minus from end of the list if there is one
+void absoluteValue(ListElement* stackFirstElement, List* stackValue)
+{
+    //if there is nothing on the stack, return
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //if stack has an empty list, return
+    if (stackFirstElement == nullptr)
+    {
+        return;
+    }
+
+    //list with one element
+    if (stackFirstElement->nextListItem == nullptr)
+    {
+        if (stackFirstElement->value == '-')
+        {
+            ListElement* oneListMinus = stackFirstElement;
+            stackValue->startOfList = nullptr;
+            delete oneListMinus;
+        }
+        return;
+    }
+
+    absoluteValueLongList(stackFirstElement);
+}
+
 
 int main()
 {
@@ -521,6 +573,13 @@ int main()
         case '.':
         {
             readAndAppend();
+            ptr_value++;
+            break;
+        }
+
+        case '^':
+        {
+            absoluteValue(stack_ptr->value.startOfList, &stack_ptr->value);
             ptr_value++;
             break;
         }
