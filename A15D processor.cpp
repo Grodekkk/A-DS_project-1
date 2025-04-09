@@ -505,6 +505,82 @@ void absoluteValue(ListElement* stackFirstElement, List* stackValue)
     absoluteValueLongList(stackFirstElement);
 }
 
+//check if there is a minus at the end of the list
+bool endIsMinus(ListElement* stackTopList)
+{
+    //check if we reached end of the list
+    if (stackTopList->nextListItem == nullptr)
+    {
+        if (stackTopList->value == '-')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return endIsMinus(stackTopList->nextListItem);
+}
+
+//add minus at the end of the list [helper]
+void addMinusAtEndHelper(ListElement* stackList)
+{
+    //end of recursion
+    if (stackList->nextListItem == nullptr)
+    {
+        ListElement* newListElement = new ListElement;
+        stackList->nextListItem = newListElement;
+        newListElement->value = '-';
+        newListElement->nextListItem = nullptr;
+        return;
+    }
+
+    addMinusAtEndHelper(stackList->nextListItem);
+}
+
+//add minus at the end of the list
+void addMinusAtEnd()
+{
+    //case with empty list
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        appendOnList('-');
+        return;
+    }
+
+    //with nonEmpty lists do recursion
+    ListElement* stackList = stack_ptr->value.startOfList;
+    addMinusAtEndHelper(stackList);
+}
+
+//negation of top of the stack
+void negate()
+{
+    //rror handling -> operation on an empty stack
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //emptylistcheckdumbbbbb
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        addMinusAtEnd();
+        return;
+    }
+
+    ListElement* thisList = stack_ptr->value.startOfList;
+    //checking if there is minus at the end of the list
+    if(endIsMinus(thisList))
+    {
+        absoluteValue(stack_ptr->value.startOfList, &stack_ptr->value);
+    }
+    else
+    {
+        addMinusAtEnd();
+    }
+}
 
 int main()
 {
@@ -583,6 +659,13 @@ int main()
             ptr_value++;
             break;
         }
+
+        case '-':
+        {
+            negate();
+            ptr_value++;
+            break;
+        }
         //check if this can be moved to "default"
         case 'q':
         case 'w':
@@ -620,7 +703,6 @@ int main()
         case '7':
         case '8':
         case '9':
-        case '-':
         {
             appendOnList(mem_ptr[ptr_value]);
             ptr_value++;
