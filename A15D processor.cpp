@@ -12,13 +12,7 @@ using namespace std;
 //==============TO DO LIST=================================================
 /*
 * GENERAL CODE CLEANING, THIS IS A MESS
-* done ;-)
-
-
-
-
-
-
+* popAndSwitch() cleaning
 */
 //==============================================================================
 
@@ -26,10 +20,11 @@ using namespace std;
 char program_mem[20000];
 char* mem_ptr = program_mem;
 int ptr_value = 0;
+int stackCounter = -1;                                   //shows current elements on stack, no elements and one elements count as zero need to be aware of that
+char dotCommand;
 
 struct ListElement;
 
-//==================================== LIST DATA & FUNCTIONS==================================================================
 struct List
 {
     ListElement* startOfList;           //pointer to 1st position on the list
@@ -41,13 +36,6 @@ struct ListElement
     ListElement* nextListItem;
 };
 
-
-
-
-//===================================== STACK DATA & FUNCTIONS ============================================================================
-//this struct is a single stack element
-
-int stackCounter = -1;                                   //shows current elements on stack, no elements and one elements count as zero need to be aware of that
 struct StackField
 {
     List value;
@@ -55,7 +43,10 @@ struct StackField
 };
 
 StackField* stack_ptr = nullptr;                        //points to top of a stack
-//at the beggining no stack -> points nowhere
+
+//=========================================================================================================================================================//
+//=====================================================FUNCTIONS===========================================================================================//
+//=========================================================================================================================================================//
 
 bool stackIsNull()
 {
@@ -246,7 +237,7 @@ void copyStackTop()
     //create new StackField, list with one emptyElement, once again List is already initiated here
     StackField* newField = new StackField;
     newField->value.startOfList = new ListElement; //need to decide between new ListElement/nullptr
-    newField->value.startOfList->nextListItem = nullptr;
+    newField->value.startOfList->nextListItem = nullptr; //important
     //getting pointers of our stackfield, NULL if on bottom previous stackfield if not
    //THIS IF STATEMENT 99% CHANCE DOES NOTHING, FUNCTION ENDS IF NULLPTR
    if (stack_ptr == nullptr)
@@ -428,23 +419,18 @@ void popAndSwitch()
     //get pointer to ish position
     StackField* numPosition = givePointer(stack_ptr, 0, numberOnStack);
 
-    //FIX START
+    
     //list copying 
     ListElement* startOfList = newField->value.startOfList;                    //this is correct
     // replace stack_ptr->value.startOfList to something else
     ListElement* startOfStackList = numPosition->value.startOfList;       //this need to be our i-sh field
     copyStackTopHelper(startOfList, startOfStackList);
 
-    //FIX STOP
-
-
     //increase stack size counter
     stackCounter++;
 
     //attach new stackField as top of the stack
     stack_ptr = newField;
-
-
 }
 
 //test function to see if list->int translate function works properly
@@ -459,6 +445,13 @@ void readStackChars(ListElement* listSearched)
     readStackChars(listSearched->nextListItem);
 }
 
+//read character from standard output and append it on StackTop list
+void readAndAppend()
+{
+    //read a character from the standard output
+    cin >> dotCommand;
+    appendOnList(dotCommand);
+}
 
 
 int main()
@@ -521,6 +514,13 @@ int main()
             readStackChars(stack_ptr->value.startOfList);
             cout << endl;
             */
+            ptr_value++;
+            break;
+        }
+
+        case '.':
+        {
+            readAndAppend();
             ptr_value++;
             break;
         }
