@@ -13,6 +13,8 @@ using namespace std;
 /*
 * GENERAL CODE CLEANING, THIS IS A MESS
 * popAndSwitch() cleaning
+* reading negative numbers in reading lists as numbers
+* error handling function
 */
 //==============================================================================
 
@@ -132,7 +134,6 @@ void show(StackField* currentStackField, int Counter)
     //error handling
     if (stack_ptr == nullptr)
     {
-        cout << "emptystack" << endl;
         return;
     }
 
@@ -582,6 +583,122 @@ void negate()
     }
 }
 
+//print first character on a list and then pop the list
+void printAndDelete()
+{
+    //check if stackmis empty
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //check if list is empty
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return;
+    }
+
+    //read first character from a list
+    cout << stack_ptr->value.startOfList->value;
+
+    //remove list from the stack
+    pop();
+}
+
+//detach first character from the list, append it to new list on top of the stack
+void detachAndAppend()
+{
+    //check if stackmis empty
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //check if list is empty
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return;
+    }
+
+    //case with one element list
+    if (stack_ptr->value.startOfList->nextListItem == nullptr)
+    {
+        char copy = stack_ptr->value.startOfList->value;
+        pop();
+        push();
+        push();
+        appendOnList(copy);
+        return;
+    }
+
+    //case with more than one element list
+
+    //get pointer to start of the list ?
+    ListElement* startOfList = stack_ptr->value.startOfList;
+    //get character from beggining of the list
+    char firstChar = stack_ptr->value.startOfList->value;
+    //change List beggining
+    stack_ptr->value.startOfList = stack_ptr->value.startOfList->nextListItem;
+    delete startOfList;
+
+
+    push();
+    appendOnList(firstChar);
+}
+
+//reads list as number from StackTop, pops and attaches new list with single character
+void readNumToChar()
+{
+    //error handling -> stack is empty
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //error handling -> StackTop is an empty list
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return;
+    }
+
+    //read list from StackTop as number
+    int A = readListToInt();
+    
+    //remove list from the stack
+    pop();
+
+    //create new list
+    push();
+
+    //append char of ASCII value of int A on list
+    appendOnList(A);
+}
+
+//pop StackTop, put on stack list with number equal to ASCII of first character
+void readCharToNum()
+{
+    //error handling -> stack is empty
+    if (stackIsNull())
+    {
+        return;
+    }
+
+    //error handling -> StackTop is an empty list
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return;
+    }
+
+    //get character from beggining of the list
+    char A = stack_ptr->value.startOfList->value;
+
+    //convert char to int
+    int convert = int(A);
+
+    //attach this list to top of a stack;
+
+}
+
 int main()
 {
     //loading all program instructions
@@ -663,6 +780,34 @@ int main()
         case '-':
         {
             negate();
+            ptr_value++;
+            break;
+        }
+
+        case '>':
+        {
+            printAndDelete();
+            ptr_value++;
+            break;
+        }
+
+        case '$':
+        {
+            detachAndAppend();
+            ptr_value++;
+            break;
+        }
+
+        case ']':
+        {
+            readNumToChar();
+            ptr_value++;
+            break;
+        }
+
+        case '[':
+        {
+            readCharToNum();
             ptr_value++;
             break;
         }
