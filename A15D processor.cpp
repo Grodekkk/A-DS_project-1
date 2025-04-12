@@ -479,7 +479,7 @@ void absoluteValueLongList(ListElement* stackTopList)
 }
 
 //remove minus from end of the list if there is one
-void absoluteValue(ListElement* stackFirstElement, List* stackValue)
+void absoluteValue(ListElement* thisList, List* stackValue)
 {
     //if there is nothing on the stack, return
     if (stackIsNull())
@@ -488,24 +488,24 @@ void absoluteValue(ListElement* stackFirstElement, List* stackValue)
     }
 
     //if stack has an empty list, return
-    if (stackFirstElement == nullptr)
+    if (thisList == nullptr)
     {
         return;
     }
 
     //list with one element
-    if (stackFirstElement->nextListItem == nullptr)
+    if (thisList->nextListItem == nullptr)
     {
-        if (stackFirstElement->value == '-')
+        if (thisList->value == '-')
         {
-            ListElement* oneListMinus = stackFirstElement;
+            ListElement* oneListMinus = thisList;
             stackValue->startOfList = nullptr;
             delete oneListMinus;
         }
         return;
     }
 
-    absoluteValueLongList(stackFirstElement);
+    absoluteValueLongList(thisList);
 }
 
 //check if there is a minus at the end of the list
@@ -558,7 +558,7 @@ void addMinusAtEnd()
 }
 
 //negation of top of the stack
-void negate()
+void negate(ListElement* thisList)
 {
     //rror handling -> operation on an empty stack
     if (stackIsNull())
@@ -573,7 +573,6 @@ void negate()
         return;
     }
 
-    ListElement* thisList = stack_ptr->value.startOfList;
     //checking if there is minus at the end of the list
     if(endIsMinus(thisList))
     {
@@ -861,25 +860,179 @@ void logicalNegation()
     appendOnList('0');
 }
 
-//helper function, deletes zeroes at the end of the list [!!!] what if minus at the end?, changes number '000120' to '120'
-void deleteZeroes()
-{
+//===========================================COMPARE FUNCTIONS==================================================================
 
+//checks if list has minus at the end [compare]
+bool isNegative(ListElement* thisList)
+{
+    if (thisList->nextListItem == nullptr)
+    {
+        if (thisList->value == '-')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return isNegative(thisList->nextListItem);
 }
 
-//checks if list has minus at the end
-bool isNegative()
+//check if list contains only zeroes, or zeroes and minus, returns 0 if so [compare]
+bool isZero(ListElement* thisList)
 {
-    return 1;
+    //check if current element is something else
+    if ((thisList->value != '0') && (thisList->value != '-'))
+    {
+        return false;
+    }
+
+    //if end of list is reached return true
+    if (thisList->nextListItem == nullptr)
+    {
+        return true;
+    }
+
+    //if not, go further
+    return isZero(thisList->nextListItem);
 }
 
-//compares lenght of two lists
+//remove minus from the list
+void removeMinus(ListElement* thisList)
+{
+    //if next value is an minus, remove is
+    if (thisList->nextListItem->value == '-')
+    {
+        ListElement* minusElement = thisList->nextListItem;
+        thisList->nextListItem = nullptr;
+        delete minusElement;
+        return;
+    }
+
+    removeMinus(thisList->nextListItem);
+}
+
+//add minus at the end of the list
+void addMinus(ListElement* thisList)
+{
+    //if at the end of the list add minus
+    if (thisList->nextListItem == nullptr)
+    {
+        thisList->nextListItem = new ListElement;
+        thisList->nextListItem->value = '-';
+        thisList->nextListItem->nextListItem = nullptr;
+        return;
+    }
+
+    addMinus(thisList->nextListItem);
+}
+
+//true if every next element of the list is zero, false otherwise
+bool everyNextElementIsZero(ListElement* thisList)
+{
+    //false condition
+    if (thisList->value != '0')
+    {
+        return false;
+    }
+
+    //if we reached to the end without false checker, then it's true
+    if (thisList->nextListItem == nullptr)
+    {
+        return true;
+    }
+
+    //recursion
+    return everyNextElementIsZero(thisList->nextListItem);
+}
+
+//go through rest of the list, if everything will be zero delete everything (from the end)
+//it will delete everything from this point, just need to isEveryElementNextZero(to be true)
+void deleteZeroes(ListElement* thisList)
+{
+
+    //recursion end check if you are at the end of the list
+    if (thisList->nextListItem->nextListItem != nullptr)
+    {
+        deleteZeroes(thisList->nextListItem);
+    }
+
+    //propably helper function will be needed
+
+    ListElement* zeroEndList = thisList->nextListItem;
+    thisList->nextListItem = nullptr;
+    delete zeroEndList;
+    //deleting only if next is nullptr
+}
+
+//iterate thru list, deleting streak of zeroes at the end
+void deleteZeroesListIterator(ListElement* thisList)
+{
+    //pointer problems
+    // next vs current one
+    // needs fixing
+    
+    //when we reached end of the list, end function
+    if (thisList->nextListItem == nullptr)
+    {
+        return;
+    }
+
+    //because of function isZero, we know that first element will not have to be deleted
+    if (thisList->nextListItem->value == '0')
+    {
+        if (everyNextElementIsZero(thisList->nextListItem))
+        {
+            deleteZeroes(thisList);
+        }
+        
+    }
+
+    if (thisList->nextListItem == nullptr)
+    {
+        return;
+    }
+
+    //continue iteration until the end
+    deleteZeroesListIterator(thisList->nextListItem);
+}
+
+//helper function, deletes zeroes at the end of the list [!!!] what if minus at the end?, changes number '000120' to '120' [compare]
+void deleteZeroesMain(ListElement* thisList)
+{
+    //since minus at end could be troublesome we will delete it temporarly
+    if (isNegative(thisList))
+    {
+        //remove minus for now [helper]
+        removeMinus(thisList);
+
+        //remove zeroes from end of the list [main task]
+        deleteZeroesListIterator(thisList);
+        
+        //add minus at the end [helper]
+        addMinus(thisList);
+
+        return;
+    }
+    else
+    {
+        //remove zeroes from end of the list [main task]
+        deleteZeroesListIterator(thisList);
+
+        return;
+    }
+}
+
+
+//compares lenght of two lists [compare]
 void AreSameSize()
 {
 
 }
 
-//compares two lists char by char
+//compares two lists char by char [compare]
 void CompareCharByChar()
 {
 
@@ -896,174 +1049,213 @@ int main()
         switch (mem_ptr[ptr_value])
         {
 
-        case '\''://push empty list on the stack
-        {
-            push();
-            ptr_value++;
-            break;
-        }
+            case '\''://push empty list on the stack
+            {
+                push();
+                ptr_value++;
+                break;
+            }
 
-        case '&':
-        {
-            int stackCpy = 0; //!!! zamiana z stackCounter
-            StackField* currentStackField = stack_ptr;   //our inside pointer that will iterate thru all stack
-            show(currentStackField, stackCpy);
-            ptr_value++;
-            break;
-        }
+            case '&':
+            {
+                int stackCpy = 0; //!!! zamiana z stackCounter
+                StackField* currentStackField = stack_ptr;   //our inside pointer that will iterate thru all stack
+                show(currentStackField, stackCpy);
+                ptr_value++;
+                break;
+            }
 
-        case ':':
-        {
-            copyStackTop();
+            case ':':
+            {
+                copyStackTop();
 
-            ptr_value++;
-            break;
-        }
+                ptr_value++;
+                break;
+            }
 
-        case ';':
-        {
-            switchLists();
-            ptr_value++;
-            break;
-        }
+            case ';':
+            {
+                switchLists();
+                ptr_value++;
+                break;
+            }
 
-        case ',':
-        {
-            pop();
-            ptr_value++;
-            break;
-        }
+            case ',':
+            {
+                pop();
+                ptr_value++;
+                break;
+            }
 
-        case '@':
-        {
+            case '@':
+            {
 
-            popAndSwitch();
-            /*
-            //test dlugosci listy
-            cout << "liczba na stosie [INT]: " << readListToInt() << endl;
-            cout << "liczba na stosie [CHAR]: ";
-            readStackChars(stack_ptr->value.startOfList);
-            cout << endl;
-            */
-            ptr_value++;
-            break;
-        }
+                popAndSwitch();
+                /*
+                //test dlugosci listy
+                cout << "liczba na stosie [INT]: " << readListToInt() << endl;
+                cout << "liczba na stosie [CHAR]: ";
+                readStackChars(stack_ptr->value.startOfList);
+                cout << endl;
+                */
+                ptr_value++;
+                break;
+            }
 
-        case '.':
-        {
-            readAndAppend();
-            ptr_value++;
-            break;
-        }
+            case '.':
+            {
+                readAndAppend();
+                ptr_value++;
+                break;
+            }
 
-        case '^':
-        {
-            absoluteValue(stack_ptr->value.startOfList, &stack_ptr->value);
-            ptr_value++;
-            break;
-        }
+            case '^':
+            {
+                absoluteValue(stack_ptr->value.startOfList, &stack_ptr->value);
+                ptr_value++;
+                break;
+            }
 
-        case '-':
-        {
-            negate();
-            ptr_value++;
-            break;
-        }
+            case '-':
+            {
+                negate(stack_ptr->value.startOfList);
+                ptr_value++;
+                break;
+            }
 
-        case '>':
-        {
-            printAndDelete();
-            ptr_value++;
-            break;
-        }
+            case '>':
+            {
+                printAndDelete();
+                ptr_value++;
+                break;
+            }
 
-        case '$':
-        {
-            detachAndAppend();
-            ptr_value++;
-            break;
-        }
+            case '$':
+            {
+                detachAndAppend();
+                ptr_value++;
+                break;
+            }
 
-        case ']':
-        {
-            readNumToChar();
-            ptr_value++;
-            break;
-        }
+            case ']':
+            {
+                readNumToChar();
+                ptr_value++;
+                break;
+            }
 
-        case '[':
-        {
-            readCharToNum();
-            ptr_value++;
-            break;
-        }
+            case '[':
+            {
+                readCharToNum();
+                ptr_value++;
+                break;
+            }
 
-        case '#':
-        {
-            reAttach();
-            ptr_value++;
-            break;
-        }
+            case '#':
+            {
+                reAttach();
+                ptr_value++;
+                break;
+            }
 
-        case '~':
-        {
-            putPtrValueOnStack();
-            ptr_value++;
-            break;
-        }
+            case '~':
+            {
+                putPtrValueOnStack();
+                ptr_value++;
+                break;
+            }
 
-        case '!':
-        {
-            logicalNegation();
-            ptr_value++;
-            break;
-        }
-        //check if this can be moved to "default"
-        case 'q':
-        case 'w':
-        case 'e':
-        case 'r':
-        case 't':
-        case 'y':
-        case 'u':
-        case 'i':
-        case 'o':
-        case 'p':
-        case 'a':
-        case 's':
-        case 'd':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'z':
-        case 'x':
-        case 'c':
-        case 'v':
-        case 'b':
-        case 'n':
-        case 'm':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        {
-            appendOnList(mem_ptr[ptr_value]);
-            ptr_value++;
-            break;
-        }
-        default:
-        {
-            ptr_value++;
-        }
+            case '!':
+            {
+                logicalNegation();
+                ptr_value++;
+                break;
+            }
+
+            case '=':
+            {
+
+                /*
+                // is list zero test '0-' == '0' == '0000' =='000000-'
+                if (isZero(stack_ptr->value.startOfList))
+                {
+                    cout << "==ZERO==";
+                }
+                else
+                {
+                    cout << "==NON ZERO==";
+                }
+                cout << endl;
+                */
+
+                /*
+                // is list negative test 
+                if (isNegative(stack_ptr->value.startOfList))
+                {
+                    cout << "==NEGATIVE==";
+                }
+                else
+                {
+                    cout << "==NON NEGATIVE==";
+                }
+                cout << endl;
+                */
+
+                //removeMinus(stack_ptr->value.startOfList);
+
+                deleteZeroesMain(stack_ptr->value.startOfList);
+
+                ptr_value++;
+                break;
+
+
+            }
+            //check if this can be moved to "default"
+            case 'q':
+            case 'w':
+            case 'e':
+            case 'r':
+            case 't':
+            case 'y':
+            case 'u':
+            case 'i':
+            case 'o':
+            case 'p':
+            case 'a':
+            case 's':
+            case 'd':
+            case 'f':
+            case 'g':
+            case 'h':
+            case 'j':
+            case 'k':
+            case 'l':
+            case 'z':
+            case 'x':
+            case 'c':
+            case 'v':
+            case 'b':
+            case 'n':
+            case 'm':
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            {
+                appendOnList(mem_ptr[ptr_value]);
+                ptr_value++;
+                break;
+            }
+            default:
+            {
+                ptr_value++;
+            }
         }
     }
 }
