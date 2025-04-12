@@ -15,7 +15,9 @@ using namespace std;
 * popAndSwitch() cleaning
 * reading negative numbers in reading lists as numbers
 * error handling function
-*/
+*/ 
+// hashtag functions need serious overhaul
+// last test num compare when num is bigger than int
 //==============================================================================
 
 //program memory and instruction pointer
@@ -674,6 +676,55 @@ void readNumToChar()
     appendOnList(A);
 }
 
+//returns integrer of power
+int myTenPow(int base, int exponent, int counterOne)
+{
+    if (exponent == 0)
+    {
+        return 1;
+    }
+
+    if (counterOne == exponent)
+    {
+        return base;
+    }
+
+    return myTenPow((base * 10), exponent, (counterOne + 1));
+
+}
+
+//translate given int ex. 1234 to list 4->3->2->1. puts it on given stack ptr.
+void translateNumberToList(int translator, int iterator, ListElement* Listend)
+{
+    int singleDigit;
+    //get single digit number
+    singleDigit = translator % myTenPow(10, iterator, 1) / myTenPow(10, iterator-1, 1);
+
+    //"remove" the last digit from the translator
+    translator = translator - translator % myTenPow(10, iterator, 1);
+
+    //turn "single digit" into 'char'
+    char ch = 48 + singleDigit;
+
+    //get the single digit at the list [NEW FUNCTION APPEND AT END]
+    Listend->value = ch;
+    Listend->nextListItem = nullptr;
+
+    //check end of recursion
+    if (translator == 0)
+    {
+        return;
+    }
+
+    //if not create new listElement and go forward
+    ListElement* nextListElement = new ListElement;
+    Listend->nextListItem = nextListElement;
+
+    //once again
+    
+    translateNumberToList(translator, (iterator + 1), nextListElement);     
+}
+
 //pop StackTop, put on stack list with number equal to ASCII of first character
 void readCharToNum()
 {
@@ -695,7 +746,142 @@ void readCharToNum()
     //convert char to int
     int convert = int(A);
 
-    //attach this list to top of a stack;
+    //remove list from top
+    pop();
+
+    //create new list;
+    push();
+
+    //put empty listelement at start of the list
+    stack_ptr->value.startOfList = new ListElement;
+
+    //put "number A" on top of the list
+    translateNumberToList(convert, 1, stack_ptr->value.startOfList);
+}
+
+//get pointer to the last element at the List
+ListElement* getEndListPointer(ListElement* ourList)
+{
+    //end of recursion
+    if (ourList->nextListItem == nullptr)
+    {
+        return ourList;
+    }
+
+    return getEndListPointer(ourList->nextListItem);
+}
+
+//copy the list
+void cpyList(ListElement* copier, ListElement* destination)
+{
+    //create new list element
+    destination->nextListItem = new ListElement;
+    destination->nextListItem->nextListItem = nullptr;
+
+    //copty the value
+    destination->nextListItem->value = copier->value;
+
+    //end recursion
+    if (copier->nextListItem == nullptr)
+    {
+        return;
+    }
+
+    cpyList(copier->nextListItem, destination->nextListItem);
+}
+
+//pop list, attach it's copy at end of the previous list
+void reAttach()
+{
+    //[!!!] propably some error handling could be nice
+
+    //get pointer to end of previous list
+    ListElement* endOfPrevious = getEndListPointer(stack_ptr->previous_element->value.startOfList);
+
+    //error Handling
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return;
+    }
+
+    //copy the current list to the end of previous list
+    cpyList(stack_ptr->value.startOfList, endOfPrevious);
+
+    //pop the stacklist
+    pop();
+}
+
+//read instruction pointer as number, attach this number as list at the end of the stack
+void putPtrValueOnStack()
+{
+    //get number of instruction
+    int convert = ptr_value;
+
+    //get new list on a stack
+    push();
+
+    //create new list
+    stack_ptr->value.startOfList = new ListElement;
+
+    //put "number A" on top of the list
+    translateNumberToList(convert, 1, stack_ptr->value.startOfList);
+
+}
+
+//if StackTop is empty or have only 0, replace with 1, otherwise, replace with 0
+void logicalNegation()
+{
+    //check if StackTop is empty
+    if (stack_ptr == nullptr)
+    {
+        push();
+        appendOnList('1');
+        return; 
+    }
+
+    //check if StackTop is an empty list
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        appendOnList('1');
+        return;
+    }
+
+    //check if StackTop list contains only '0'
+    if (stack_ptr->value.startOfList->value == '0' && stack_ptr->value.startOfList->nextListItem == nullptr)
+    {
+        pop();
+        push();
+        appendOnList('1');
+        return;
+    }
+
+    //otherwise put '0' on top of StackTop
+    pop();
+    push();
+    appendOnList('0');
+}
+
+//helper function, deletes zeroes at the end of the list [!!!] what if minus at the end?, changes number '000120' to '120'
+void deleteZeroes()
+{
+
+}
+
+//checks if list has minus at the end
+bool isNegative()
+{
+    return 1;
+}
+
+//compares lenght of two lists
+void AreSameSize()
+{
+
+}
+
+//compares two lists char by char
+void CompareCharByChar()
+{
 
 }
 
@@ -808,6 +994,27 @@ int main()
         case '[':
         {
             readCharToNum();
+            ptr_value++;
+            break;
+        }
+
+        case '#':
+        {
+            reAttach();
+            ptr_value++;
+            break;
+        }
+
+        case '~':
+        {
+            putPtrValueOnStack();
+            ptr_value++;
+            break;
+        }
+
+        case '!':
+        {
+            logicalNegation();
             ptr_value++;
             break;
         }
