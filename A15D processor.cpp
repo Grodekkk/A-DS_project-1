@@ -1,5 +1,7 @@
 #include <iostream>
 #include <math.h>
+//infinite loop
+// 49 - 58 -> infinite loop
 // test 1 COMPLETE
 // test 2 COMPLETE
 // test 3 COMPLETE
@@ -396,8 +398,15 @@ StackField* givePointer(StackField* stackPosition, int counter, int destination)
 //will perform '@' action of copying number on stack and then copying list on stack [@]
 void popAndSwitch()
 {
+    
+
     //read number that is on stack
     int numberOnStack = readListToInt();
+
+    if (numberOnStack >= stackCounter || numberOnStack < 0) //[!!!] cleaner way
+    {
+        return;
+    }
 
     //remove that list/number from stack
     pop();
@@ -1025,18 +1034,188 @@ void deleteZeroesMain(ListElement* thisList)
     }
 }
 
+//returns size of a list as integer number, size in declaration must be one
+int returnListSize(ListElement* thisList, int size)
+{
+    //if reached end of the list
+    if (thisList->nextListItem == nullptr)
+    {
+        return size;
+    }
+
+    return returnListSize(thisList->nextListItem, (size + 1));
+
+}
 
 //compares lenght of two lists [compare]
-void AreSameSize()
+bool AreSameSize()
 {
+    return true;
+}
+
+//helper function comparing lists char by char returns 1->toplist bigger  2-> bottom bigger  3->equal
+int CompareCharByCharHelper(ListElement* topList, ListElement* bottomList, int code)
+{
+    //code starts as 3, if there won't be any change then lists are equal
+    //every next list item is x10 bigger number so final bigger will decide
+    if (topList->value > bottomList->value)
+    {
+        code = 1;
+    }
+
+    if(topList->value < bottomList->value)
+    {
+        code = 2;
+    }
+
+    //end of recursion
+    if (topList->nextListItem == nullptr)
+    {
+        return code;
+    }
+
+    return CompareCharByCharHelper(topList->nextListItem, bottomList->nextListItem, code);
+}
+
+//compares two lists char by char [compare], only when both are positive or negative returns 1->toplist bigger  2-> bottom bigger  3->equal
+int CompareCharByChar(ListElement* topList, ListElement* bottomList)
+{
+    //once again minuses are pain so we can remove them temporarly
+    if ((isNegative(topList) == 1) && (isNegative(bottomList) == 1))
+    {
+        //remove minusus for comparison
+        removeMinus(topList);
+        removeMinus(bottomList);
+        
+        //1->toplist bigger  2-> bottom bigger  3->equal
+        int result = CompareCharByCharHelper(topList, bottomList, 3);
+
+
+        //add minuses after everything
+        addMinus(topList);
+        addMinus(bottomList);
+
+        return result;
+    }
+    else
+    {
+        int result = CompareCharByCharHelper(topList, bottomList, 3);
+        return result;
+    }
 
 }
 
-//compares two lists char by char [compare]
-void CompareCharByChar()
+//returns true if any list is empty or zero returns 1->toplist bigger  2-> bottom bigger  3->equal
+int compareTwoListsMainError(ListElement* topList, ListElement* bottomList)
+{
+    //if both lists are equal, return 3
+    if (stack_ptr->value.startOfList == nullptr && stack_ptr->previous_element->value.startOfList == nullptr)
+    {
+        return 3;
+    }
+
+    //if both lists are zero, return 3
+    if (isZero(topList) == 1 && isZero(bottomList) == 1)
+    {
+        return 3;
+    }
+
+    // top->0   bottom->-10   return 1
+    if (isZero(topList) == 1 && isNegative(bottomList) == 1)
+    {
+        return 1;
+    }
+
+    // top->0   bottom->10   return 2
+    if (isZero(topList) == 1 && isNegative(bottomList) == 0)
+    {
+        return 2;
+    }
+
+    // top->-1   bottom->0   return 2
+    if (isNegative(topList) == 1 && isZero(bottomList) == 1)
+    {
+        return 2;
+    }
+
+    // top->1   bottom->0   return 1
+    if (isNegative(topList) == 0 && isZero(bottomList) == 1)
+    {
+        return 1;
+    }
+
+    //otherwise 
+    return 10;
+}
+
+//main function for comparing two functions, [returns 1 if toplist is bigger, 2 if bottom one, 3 if equal], lists shouldn't be empty
+//what about zeroes and empty lists warning: control may reach end of non-void function [-Wreturn-type]
+int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 {
 
+    //=======CASE 0, POSITIVE AND NEGATIVE===================
+    if ((isNegative(topList) == 1) && (isNegative(bottomList) == 0))
+    {
+        return 2;
+    }
+
+    if ((isNegative(topList) == 0) && (isNegative(bottomList) == 1))
+    {
+        return 1;
+    }
+
+    //check size of both lists
+    int listA = returnListSize(topList, 1);
+    int listB = returnListSize(bottomList, 1);
+    //=======CASE 1, BOTH POSITIVE===========================
+    if ((isNegative(topList) == 0) && (isNegative(bottomList) == 0))
+    {
+        //if one of the lists are longer
+        if (listA > listB)
+        {
+            return 1;
+        }
+        
+        if (listA < listB)
+        {
+            return 2;
+        }
+
+        return CompareCharByChar(topList, bottomList);
+    }
+
+
+
+    //=======CASE 2, BOTH NEGATIVE===========================
+    if ((isNegative(topList) == 1) && (isNegative(bottomList) == 1))
+    {
+        //if one of the lists are longer
+        if (listA < listB)
+        {
+            return 1;
+        }
+
+        if (listA > listB)
+        {
+            return 2;
+        }
+
+        if (CompareCharByChar(topList, bottomList) == 2)
+        {
+            return 1;
+        }
+        else if (CompareCharByChar(topList, bottomList) == 1)
+        {
+            return 2;
+        }
+        else
+        {
+            return 3;
+        }
+    }
+
 }
+
 
 int main()
 {
@@ -1046,8 +1225,11 @@ int main()
     //iterating through all program instructions
     while (mem_ptr[ptr_value] != '\0')
     {
+        cout << ptr_value;
         switch (mem_ptr[ptr_value])
         {
+            
+            
 
             case '\''://push empty list on the stack
             {
@@ -1172,42 +1354,154 @@ int main()
                 break;
             }
 
+            //very easily new function
             case '=':
             {
-
-                /*
-                // is list zero test '0-' == '0' == '0000' =='000000-'
-                if (isZero(stack_ptr->value.startOfList))
+                
+                if (compareTwoListsMainError(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) != 10)
                 {
-                    cout << "==ZERO==";
+                    if (compareTwoListsMainError(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 3)
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('1');
+                        ptr_value++;
+                        break;
+                    }
+                    else
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('0');
+                        ptr_value++;
+                        break;
+                    }
                 }
-                else
+                else 
                 {
-                    cout << "==NON ZERO==";
-                }
-                cout << endl;
-                */
+                    //clean lists
+                    deleteZeroesMain(stack_ptr->value.startOfList);
+                    deleteZeroesMain(stack_ptr->previous_element->value.startOfList);
 
-                /*
-                // is list negative test 
-                if (isNegative(stack_ptr->value.startOfList))
-                {
-                    cout << "==NEGATIVE==";
+                    if (compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 3)
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('1');
+                        ptr_value++;
+                        break;
+                    }
+                    else
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('0');
+                        ptr_value++;
+                        break;
+                    }
                 }
-                else
-                {
-                    cout << "==NON NEGATIVE==";
-                }
-                cout << endl;
-                */
-
-                //removeMinus(stack_ptr->value.startOfList);
-
-                deleteZeroesMain(stack_ptr->value.startOfList);
+                    
+                
 
                 ptr_value++;
                 break;
 
+
+            }
+
+            //very easily new function
+            case '<':
+            {
+                if (compareTwoListsMainError(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) != 10)
+                {
+                    if (compareTwoListsMainError(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 1)
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('1');
+                        ptr_value++;
+                        break;
+                    }
+                    else
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('0');
+                        ptr_value++;
+                        break;
+                    }
+                }
+                else
+                {
+                    //clean lists
+                    deleteZeroesMain(stack_ptr->value.startOfList);
+                    deleteZeroesMain(stack_ptr->previous_element->value.startOfList);
+
+                    if (compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 1)
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('1');
+                        ptr_value++;
+                        break;
+                    }
+                    else
+                    {
+                        pop();
+                        pop();
+                        push();
+                        appendOnList('0');
+                        ptr_value++;
+                        break;
+                    }
+                }
+
+
+
+                ptr_value++;
+                break;
+            }
+
+            case '?':
+            {
+                
+                int replacer = readListToInt();
+                if (replacer == ptr_value)
+                {
+                    cout << "[ERROR] Infinite loop detected: replacer == ptr_value == " << replacer << endl;
+                    break;
+                }
+                pop();
+
+                if(stack_ptr->value.startOfList == nullptr)
+                {
+                    pop();
+                    
+                    ptr_value++;
+                    break;
+                }
+
+                if (stack_ptr->value.startOfList->value == '0' && stack_ptr->previous_element->value.startOfList->nextListItem == nullptr)
+                {
+                    pop();
+                    ptr_value++;
+                    break;
+                }
+
+                //actual jump
+                
+               
+                pop();
+                ptr_value = replacer;
+                break;
+                
 
             }
             //check if this can be moved to "default"
@@ -1259,3 +1553,38 @@ int main()
         }
     }
 }
+
+//======================== '=' DEBUGGING =============================================
+/*
+                // is list zero test '0-' == '0' == '0000' =='000000-'
+                if (isZero(stack_ptr->value.startOfList))
+                {
+                    cout << "==ZERO==";
+                }
+                else
+                {
+                    cout << "==NON ZERO==";
+                }
+                cout << endl;
+                */
+
+                /*
+                // is list negative test
+                if (isNegative(stack_ptr->value.startOfList))
+                {
+                    cout << "==NEGATIVE==";
+                }
+                else
+                {
+                    cout << "==NON NEGATIVE==";
+                }
+                cout << endl;
+                */
+
+                //removeMinus(stack_ptr->value.startOfList);
+
+                //deleteZeroesMain(stack_ptr->value.startOfList);
+
+                //cout << compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList);
+
+                //cout << CompareCharByChar(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList);
