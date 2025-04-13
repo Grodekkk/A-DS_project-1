@@ -403,20 +403,23 @@ void popAndSwitch()
     //read number that is on stack
     int numberOnStack = readListToInt();
 
-    if (numberOnStack >= stackCounter || numberOnStack < 0) //[!!!] cleaner way
-    {
-        return;
-    }
+    //if (numberOnStack >= stackCounter || numberOnStack < 0) //[!!!] cleaner way
+    //{
+    //    return;
+    //}
 
     //remove that list/number from stack
     pop();
 
     //create new stack field, again List is part of StackField -> also initiated
     StackField* newField = new StackField;
-    newField->value.startOfList = new ListElement;
+    
 
+
+    //what if we copy empty list
+    
     //start of list points to nowhere
-    newField->value.startOfList->nextListItem = nullptr;
+    
 
     //append new stackfield to the stack
     if (stack_ptr == nullptr)
@@ -431,7 +434,17 @@ void popAndSwitch()
     //get pointer to ish position
     StackField* numPosition = givePointer(stack_ptr, 0, numberOnStack);
 
-    
+    //debug
+    if (numPosition->value.startOfList == nullptr)
+    {
+        newField->value.startOfList = nullptr;
+        stackCounter++;
+        stack_ptr = newField;
+        return;
+    }
+
+    newField->value.startOfList = new ListElement;
+    newField->value.startOfList->nextListItem = nullptr;
     //list copying 
     ListElement* startOfList = newField->value.startOfList;                    //this is correct
     // replace stack_ptr->value.startOfList to something else
@@ -1225,7 +1238,8 @@ int main()
     //iterating through all program instructions
     while (mem_ptr[ptr_value] != '\0')
     {
-        cout << ptr_value;
+        //[!!!] debug
+        //cout << ptr_value << ": " << endl;
         switch (mem_ptr[ptr_value])
         {
             
@@ -1473,11 +1487,11 @@ int main()
             {
                 
                 int replacer = readListToInt();
-                if (replacer == ptr_value)
-                {
-                    cout << "[ERROR] Infinite loop detected: replacer == ptr_value == " << replacer << endl;
-                    break;
-                }
+                //if (replacer == ptr_value)
+               // {
+               //     cout << "[ERROR] Infinite loop detected: replacer == ptr_value == " << replacer << endl;
+               //     break;
+              //  }
                 pop();
 
                 if(stack_ptr->value.startOfList == nullptr)
@@ -1503,6 +1517,13 @@ int main()
                 break;
                 
 
+            }
+
+            case '+':
+            {
+                cout << "szefik szefik" << endl;
+                ptr_value++;
+                break;
             }
             //check if this can be moved to "default"
             case 'q':
