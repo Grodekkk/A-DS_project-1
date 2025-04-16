@@ -882,7 +882,9 @@ void logicalNegation()
     appendOnList('0');
 }
 
+//==============================================================================================================================
 //===========================================COMPARE FUNCTIONS==================================================================
+//==============================================================================================================================
 
 //checks if list has minus at the end [compare]
 bool isNegative(ListElement* thisList)
@@ -902,7 +904,7 @@ bool isNegative(ListElement* thisList)
     return isNegative(thisList->nextListItem);
 }
 
-//check if list contains only zeroes, or zeroes and minus, returns 0 if so [compare]
+//check if list contains only zeroes, or zeroes and minus, returns 0 if so [compare] [true if zero]
 bool isZero(ListElement* thisList)
 {
     //check if current element is something else
@@ -1229,6 +1231,150 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 
 }
 
+//===========================================================================================================================================
+//====================================== PLUS COMMAND "+" ===================================================================================
+//===========================================================================================================================================
+
+//error handling helper function, removes list beneath the stack
+void popSecondStackField()
+{
+    StackField* secondField = stack_ptr->previous_element;
+
+    //rearange stacktop pointer -> previous element is third  
+    stack_ptr->previous_element = stack_ptr->previous_element->previous_element;
+
+    //delete second stackfield
+    if (secondField->value.startOfList != nullptr)
+    {
+        ListElement* listCleaner = secondField->value.startOfList;
+        deleteStackContent(listCleaner);
+    }
+
+    delete secondField;
+    stackCounter--;
+
+}
+
+//in case of one or two list being zero or empty, add Those lists accordingly [is this needed?] [maybe only the empty lists]    
+bool plusCommandErrorHandling()
+{
+    //case 1 both lists are empty
+    if (stack_ptr->value.startOfList == nullptr && stack_ptr->previous_element->value.startOfList == nullptr)
+    {
+        //multiplication of two lists will be one empty list, we just need to delete one
+        pop();
+        return true;
+    }
+
+    //case 2: top list is empty
+    if (stack_ptr->value.startOfList == nullptr && stack_ptr->previous_element->value.startOfList != nullptr)
+    {
+        //delete top list, bottom one is result
+        pop();
+        return true;
+    }
+
+    //case 3: bottom list is empty
+    if (stack_ptr->value.startOfList != nullptr && stack_ptr->previous_element->value.startOfList == nullptr)
+    {
+        popSecondStackField();
+        return true;
+    }
+
+    //case 4: both lists are zero
+    if ((isZero(stack_ptr->value.startOfList) == 1) && (isZero(stack_ptr->previous_element->value.startOfList) == 1))
+    {
+        //adding two empty lists will be empty list
+        pop();
+        return true;
+    }
+
+    //case 5: top list is zero
+    if ((isZero(stack_ptr->value.startOfList) == 1) && (isZero(stack_ptr->previous_element->value.startOfList) == 0))
+    {
+        //adding two empty lists will be empty list
+        pop();
+        return true;
+    }
+
+    //case 6: bottom list is zero
+    if ((isZero(stack_ptr->value.startOfList) == 0) && (isZero(stack_ptr->previous_element->value.startOfList) == 1))
+    {
+        //adding two empty lists will be empty list
+        popSecondStackField();
+        return true;
+    }
+
+
+
+    return false;
+}
+
+//adding two positive numbers function
+void addingPositives(ListElement* biggerList, ListElement* smallerList, int carry)
+{
+    //adding current stackElements -> checking if there is number to carry
+    if ((biggerList->value - 48) + (smallerList->value - 48) + carry > 9)
+    {
+        //biggerlist will have modulo 10 of current num
+        biggerList->value = (((biggerList->value - 48) + (smallerList->value - 48) + carry) % 10) + 48;
+        carry = 1;
+    }
+    else
+    {
+        biggerList->value = biggerList->value - 48 + smallerList->value + carry;
+        carry = 0;
+    }
+
+    //if we carry list is empty, add new field
+    if (carry == 1 && biggerList->nextListItem == nullptr)
+    {
+        biggerList->nextListItem = new ListElement;
+        biggerList->nextListItem->value = '0';
+        biggerList->nextListItem->nextListItem = nullptr;
+    }
+
+    //when do we end recursion -> smaller.next == nullptr
+    //but we have to handle carry then
+    if (smallerList->nextListItem == nullptr)
+    {
+        //if there is carry [wont work] e.g. 99999999+ 1
+        if (carry)
+        {
+            //helper function: 99% needed
+            biggerList->nextListItem->value = carry + 48;
+        }
+
+        return;
+    }
+
+    addingPositives(biggerList->nextListItem, smallerList->nextListItem, carry);
+}
+
+
+//add two list from top of the stack [main] [+]
+//notes for future optimalisation:
+//error handle for zeroes might be not needed if everything works
+//but check adding 0, 0- to positive and negative numbers
+void addStackTopLists()
+{
+    //error handling -> adding of zero and empty lists
+    if(plusCommandErrorHandling())
+    {
+            return;
+    }
+
+    //clean the data -> remove last minuses
+    deleteZeroesMain(stack_ptr->value.startOfList);
+    deleteZeroesMain(stack_ptr->previous_element->value.startOfList);
+
+    //case 1: adding two positive numbers
+    if ((isNegative(stack_ptr->value.startOfList) == 0) && (isNegative(stack_ptr->previous_element->value.startOfList) == 0))
+    {
+        //helper real adding
+    }
+}
+
 
 int main()
 {
@@ -1521,7 +1667,7 @@ int main()
 
             case '+':
             {
-                cout << "szefik szefik" << endl;
+                addStackTopLists();
                 ptr_value++;
                 break;
             }
