@@ -1310,10 +1310,38 @@ bool plusCommandErrorHandling()
     return false;
 }
 
+//end of adding carry handle in the bigger list
+void carryHandleBiggerList(ListElement* biggerList, int carry)
+{
+    //if our value + carry > 9
+    if ((biggerList->value - 48) + carry > 9)
+    {
+        biggerList->value = (((biggerList->value - 48) + carry) % 10) + 48;
+        carry = 1;
+    }
+    else
+    {
+        biggerList->value = biggerList->value + carry;
+        //no carry, we can return
+        return;
+    }
+
+    if (carry == 1 && biggerList->nextListItem == nullptr)
+    {
+        biggerList->nextListItem = new ListElement;
+        biggerList->nextListItem->value = '0';
+        biggerList->nextListItem->nextListItem = nullptr;
+    }
+
+    carryHandleBiggerList(biggerList->nextListItem, carry);
+}
+
+
 //adding two positive numbers function
 void addingPositives(ListElement* biggerList, ListElement* smallerList, int carry)
 {
     //adding current stackElements -> checking if there is number to carry
+    //carry handle
     if ((biggerList->value - 48) + (smallerList->value - 48) + carry > 9)
     {
         //biggerlist will have modulo 10 of current num
@@ -1326,7 +1354,7 @@ void addingPositives(ListElement* biggerList, ListElement* smallerList, int carr
         carry = 0;
     }
 
-    //if we carry list is empty, add new field
+    //if we carry and list is empty, add new field
     if (carry == 1 && biggerList->nextListItem == nullptr)
     {
         biggerList->nextListItem = new ListElement;
@@ -1341,14 +1369,114 @@ void addingPositives(ListElement* biggerList, ListElement* smallerList, int carr
         //if there is carry [wont work] e.g. 99999999+ 1
         if (carry)
         {
+            carryHandleBiggerList(biggerList->nextListItem, carry);
             //helper function: 99% needed
-            biggerList->nextListItem->value = carry + 48;
+            //biggerList->nextListItem->value = carry + 48; //nah wont be working
         }
 
         return;
     }
 
     addingPositives(biggerList->nextListItem, smallerList->nextListItem, carry);
+}
+
+void addingStackClean(ListElement* biggerList)
+{
+    //if the "bottom list" became top one, remove top
+    if (biggerList == stack_ptr->previous_element->value.startOfList)
+    {
+        pop();
+    }
+    else //if the top is bigger, remove list underneath
+    {
+        popSecondStackField();
+    }
+}
+
+//
+void substractionHelperBiggerList(ListElement* biggerList, int borrow)
+{
+    if (biggerList->value - 1 - 48 < 0)
+    {
+        biggerList->value = (biggerList->value - 1 + 10);
+        borrow = 1;
+    }
+    else
+    {
+        return;
+    }
+
+    //there is no need for errorchecking or anything like that, because we are always substracting bigger - smaller
+    substractionHelperBiggerList(biggerList->nextListItem, borrow);
+}
+
+//function substracting bigger-smaller
+void substractionHelper(ListElement* biggerList, ListElement* smallerList, int borrow)
+{
+    //substracting current listBlocks, is carry needed?
+    //potential bugger -> what if 
+    if ((biggerList->value - smallerList->value - borrow) < 0)
+    {
+        biggerList->value = biggerList->value - smallerList->value - borrow + 10 + 48;
+        borrow = 1;
+    }
+    else
+    {
+        biggerList->value = biggerList->value - smallerList->value - borrow + 48;
+        borrow = 0;
+    }
+
+    //end of substraction
+    if (smallerList->nextListItem == nullptr)
+    {
+        if (borrow)
+        {
+            substractionHelperBiggerList(biggerList->nextListItem, borrow);
+        }
+        return;
+    }
+
+    //recursion
+    substractionHelper(biggerList->nextListItem, smallerList->nextListItem, borrow);
+}
+
+void handlesubtraction()
+{
+    //we already know that one list is negative and second one is positive, let's specify which one
+    ListElement* negativeList;
+    if (isNegative(stack_ptr->value.startOfList) == 1)
+    {
+        negativeList = stack_ptr->value.startOfList;
+    }
+    else
+    {
+        negativeList = stack_ptr->previous_element->value.startOfList;
+    }
+
+    //lets remove the negative sign from bigger list [for now]
+    removeMinus(negativeList);
+
+    //compare the lists -> we will substract [bigger - smaller]
+    ListElement* bigger;
+    ListElement* smaller;
+
+    if (compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 1)
+    {
+        bigger = stack_ptr->value.startOfList;
+        smaller = stack_ptr->previous_element->value.startOfList;
+    }
+    else
+    {
+        bigger = stack_ptr->previous_element->value.startOfList;
+        smaller = stack_ptr->value.startOfList;
+    }
+
+    //do the actual substraction
+    substractionHelper(bigger, smaller, 0);
+
+    //check if sign needs to be reversed [e.g. 1-99 will be treated as 99-1 -> then needs to be changed into -98]
+
+    //stack cleaning!!!
 }
 
 
@@ -1368,11 +1496,67 @@ void addStackTopLists()
     deleteZeroesMain(stack_ptr->value.startOfList);
     deleteZeroesMain(stack_ptr->previous_element->value.startOfList);
 
+
+    //determine which list is bigger -> easier adding [returns 1 if toplist is bigger, 2 if bottom one, 3 if equal]
+    //compareTwoListsMain(ListElement* topList, ListElement* bottomList)
+
+    //declare the pointers to the lists
+    //see if this will be needed, maybe we can also dodge that
+    ListElement* bigger;
+    ListElement* smaller;
+    if (compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) == 1)
+    {
+        bigger = stack_ptr->value.startOfList;
+        smaller = stack_ptr->previous_element->value.startOfList;
+    }
+    else
+    {
+        bigger = stack_ptr->previous_element->value.startOfList;
+        smaller = stack_ptr->value.startOfList;
+    }
+    
     //case 1: adding two positive numbers
+    //todo: organise stack, there is two lists currently
     if ((isNegative(stack_ptr->value.startOfList) == 0) && (isNegative(stack_ptr->previous_element->value.startOfList) == 0))
     {
+        addingPositives(bigger, smaller, 0);
         //helper real adding
+        //rearange the stack
+        addingStackClean(bigger);
+        return;
     }
+
+    //case 2: "adding" two negative numbers
+    //important -> do the comparison after the changing or change the bigger smaller
+    //one is cleaner [!!!] bug!
+    //second one more efficient
+    //for now we changed , seek online which better, add coments
+    if ((isNegative(stack_ptr->value.startOfList) == 1) && (isNegative(stack_ptr->previous_element->value.startOfList) == 1))
+    {
+        //step one remove minuses
+        removeMinus(stack_ptr->value.startOfList);
+        removeMinus(stack_ptr->previous_element->value.startOfList);
+        
+        //was bigger smaller -> switch order because how negative numbers work
+        addingPositives(smaller, bigger, 0);
+        //helper real adding
+        //rearange the stack
+        //was bigger
+        addingStackClean(smaller);
+
+        //negate stacktop -> switch order because how negative numbers work
+        addMinus(stack_ptr->value.startOfList);
+
+        return;
+    }
+
+    //case 3: "adding" negative and positive number (every other case)
+    //idea of always minusing the smaller from the bigger like 9999-1 even when it's 1-9999
+
+    //get to know which one is "bigger" in absolute value way
+    handlesubtraction();
+    //remove minuses also
+    //onlyone is negative so we have to check that ony once
 }
 
 
