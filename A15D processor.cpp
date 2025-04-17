@@ -1,32 +1,16 @@
 #include <iostream>
 #include <math.h>
-//infinite loop
-// 49 - 58 -> infinite loop
-// test 1 COMPLETE
-// test 2 COMPLETE
-// test 3 COMPLETE
-// test 4 COMPLETE
-// test 5 COMPLETE
-// test 6 COMPLETE
-// test 7 0/
+
 using namespace std;
 
-//==============TO DO LIST=================================================
-/*
-* GENERAL CODE CLEANING, THIS IS A MESS
-* popAndSwitch() cleaning
-* reading negative numbers in reading lists as numbers
-* error handling function
-*/ 
-// hashtag functions need serious overhaul
-// last test num compare when num is bigger than int
-//==============================================================================
-
-//program memory and instruction pointer
+//===========================================================================================================
+//==========================================DATA STRUCTURES==================================================
+//===========================================================================================================
+//[cleaning] this needs to be local :(, made into struck -> read about typedef
 char program_mem[20000];
 char* mem_ptr = program_mem;
 int ptr_value = 0;
-int stackCounter = -1;                                   //shows current elements on stack, no elements and one elements count as zero need to be aware of that
+int stackCounter = -1;          //shows current elements on stack, no elements and one elements count as zero need to be aware of that
 char dotCommand;
 
 struct ListElement;
@@ -50,10 +34,12 @@ struct StackField
 
 StackField* stack_ptr = nullptr;                        //points to top of a stack
 
-//=========================================================================================================================================================//
-//=====================================================FUNCTIONS===========================================================================================//
-//=========================================================================================================================================================//
+//============================================================================================================================================
+//=====================================================FUNCTIONS==============================================================================
+//============================================================================================================================================
 
+//returns 1 if stack is empty, 0 otherwise
+//[cleaning] can be made a part of bigger function errorhandling
 bool stackIsNull()
 {
     if (stack_ptr == nullptr)
@@ -66,7 +52,7 @@ bool stackIsNull()
     }
 }
 
-//append value at beggining of the list
+//append value at beggining of the stackTopList
 void appendOnList(char value)
 {
     //case with empty list
@@ -76,9 +62,10 @@ void appendOnList(char value)
         stack_ptr->value.startOfList->value = value;
         stack_ptr->value.startOfList->nextListItem = nullptr;
     }
+    //every other case, we make new beggining of the list, no need for switching every item
     else
     {
-        //every other case, we make new beggining of the list, no need for switching every item
+        
         ListElement* newListElement = new ListElement;
         newListElement->value = value;
         newListElement->nextListItem = stack_ptr->value.startOfList;
@@ -91,12 +78,12 @@ void push()
 {
     //create new StackField
     StackField* newField = new StackField;  //List is part of StackField, so it's also allocated here
-    newField->value.startOfList = nullptr;  //so we can do it like that
+    newField->value.startOfList = nullptr;
 
-    //check if stack is empty
+    //check if stack is empty, for previous element pointer
     if (stack_ptr == nullptr)
     {
-        newField->previous_element = nullptr;           //first element of stack doesnt have any element below
+        newField->previous_element = nullptr;           
     }
     else
     {
@@ -108,31 +95,24 @@ void push()
     stackCounter++;
 }
 
-//print stack content [helper function]
+//print stack content [helper function] [& command]
 void printList(ListElement* listIterator)
 {
-    //again if works this should be moved to the main cause its shitty
-    if (listIterator == nullptr)
-    {
-        cout << endl;        //prints last value and end a function at the end of the list
-        return;
-    }
-    //unknown memory, need to make it null right now its "trash memory" fix it in push
+    //print current element of the list
+    cout << listIterator->value;               
+
+    //end of recursion
     if (listIterator->nextListItem == nullptr)
     {
-        cout << listIterator->value << endl;        //prints last value and end a function at the end of the list
+        cout << endl;    //next list/end of printing    
         return;
     }
-    else
-    {
-        cout << listIterator->value;                //prints current element of the list
-        listIterator = listIterator->nextListItem;  //listIteratr jumps to next element of list
-        printList(listIterator);
-    }
-
+    
+    //continue recursion    
+    printList(listIterator->nextListItem);
 }
 
-//print stack content
+//print stack content [& command]
 void show(StackField* currentStackField, int Counter)
 {
     //error handling
@@ -176,6 +156,7 @@ void show(StackField* currentStackField, int Counter)
             printList(listIterator);
         }
     }
+    
 }
 
 //put a exact copy of list from top on top of an stack [helper function]
@@ -1850,13 +1831,8 @@ int main()
 
             case '?':
             {
-                
+                //move to function
                 int replacer = readListToInt();
-                //if (replacer == ptr_value)
-               // {
-               //     cout << "[ERROR] Infinite loop detected: replacer == ptr_value == " << replacer << endl;
-               //     break;
-              //  }
                 pop();
 
                 if(stack_ptr->value.startOfList == nullptr)
@@ -1890,90 +1866,12 @@ int main()
                 ptr_value++;
                 break;
             }
-            //check if this can be moved to "default"
-            case 'q':
-            case 'w':
-            case 'e':
-            case 'r':
-            case 't':
-            case 'y':
-            case 'u':
-            case 'i':
-            case 'o':
-            case 'p':
-            case 'a':
-            case 's':
-            case 'H':
-            case 'd':
-            case 'f':
-            case 'g':
-            case 'h':
-            case 'j':
-            case 'k':
-            case 'l':
-            case 'z':
-            case 'x':
-            case 'c':
-            case 'v':
-            case 'b':
-            case 'n':
-            case 'm':
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-            case '_':
-            case ' ':
+            default:
             {
                 appendOnList(mem_ptr[ptr_value]);
                 ptr_value++;
                 break;
             }
-            default:
-            {
-                ptr_value++;
-            }
         }
     }
 }
-
-//======================== '=' DEBUGGING =============================================
-/*
-                // is list zero test '0-' == '0' == '0000' =='000000-'
-                if (isZero(stack_ptr->value.startOfList))
-                {
-                    cout << "==ZERO==";
-                }
-                else
-                {
-                    cout << "==NON ZERO==";
-                }
-                cout << endl;
-                */
-
-                /*
-                // is list negative test
-                if (isNegative(stack_ptr->value.startOfList))
-                {
-                    cout << "==NEGATIVE==";
-                }
-                else
-                {
-                    cout << "==NON NEGATIVE==";
-                }
-                cout << endl;
-                */
-
-                //removeMinus(stack_ptr->value.startOfList);
-
-                //deleteZeroesMain(stack_ptr->value.startOfList);
-
-                //cout << compareTwoListsMain(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList);
-
-                //cout << CompareCharByChar(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList);
