@@ -1129,6 +1129,16 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList)
         return 3;
     }
 
+    //if one of them is null
+    if (stack_ptr->value.startOfList == nullptr && stack_ptr->previous_element->value.startOfList != nullptr)
+    {
+        return 2;
+    }
+    if (stack_ptr->value.startOfList != nullptr && stack_ptr->previous_element->value.startOfList == nullptr)
+    {
+        return 1;
+    }
+
     //if both lists are zero, return 3
     if (isZero(topList) == 1 && isZero(bottomList) == 1)
     {
@@ -1393,16 +1403,19 @@ void addingStackClean(ListElement* biggerList)
     }
 }
 
-//
+//handling the borrowing from only one list, like 1000000000 - 1 (borrowing only from one list)
 void substractionHelperBiggerList(ListElement* biggerList, int borrow)
 {
-    if (biggerList->value - 1 - 48 < 0)
+    //if borrowing is needed
+    if (biggerList->value - borrow - 48 < 0)
     {
         biggerList->value = (biggerList->value - 1 + 10);
         borrow = 1;
     }
+    //if borrowing is not needed
     else
     {
+        biggerList->value = biggerList->value - 1;
         return;
     }
 
@@ -1474,9 +1487,30 @@ void handlesubtraction()
     //do the actual substraction
     substractionHelper(bigger, smaller, 0);
 
+    //stack cleaning!!!
+    if (bigger == stack_ptr->value.startOfList)
+    {
+        popSecondStackField();
+    }
+    else
+    {
+        pop();
+    }
+
+    //add minus if needed
+    if (bigger == negativeList && (isZero(bigger) == 0))
+    {
+        addMinus(bigger);
+    }
+
+    //remove leading zeroes
+    deleteZeroesMain(bigger);
+    
+
     //check if sign needs to be reversed [e.g. 1-99 will be treated as 99-1 -> then needs to be changed into -98]
 
-    //stack cleaning!!!
+
+    
 }
 
 
@@ -1569,7 +1603,8 @@ int main()
     while (mem_ptr[ptr_value] != '\0')
     {
         //[!!!] debug
-        //cout << ptr_value << ": " << endl;
+       //cout << ptr_value << " ";
+        //show(stack_ptr, 0);
         switch (mem_ptr[ptr_value])
         {
             
@@ -1832,7 +1867,7 @@ int main()
                     break;
                 }
 
-                if (stack_ptr->value.startOfList->value == '0' && stack_ptr->previous_element->value.startOfList->nextListItem == nullptr)
+                if (isZero(stack_ptr->value.startOfList))
                 {
                     pop();
                     ptr_value++;
@@ -1868,6 +1903,7 @@ int main()
             case 'p':
             case 'a':
             case 's':
+            case 'H':
             case 'd':
             case 'f':
             case 'g':
@@ -1892,6 +1928,8 @@ int main()
             case '7':
             case '8':
             case '9':
+            case '_':
+            case ' ':
             {
                 appendOnList(mem_ptr[ptr_value]);
                 ptr_value++;
