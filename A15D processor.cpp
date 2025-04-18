@@ -3,6 +3,11 @@
 
 using namespace std;
 
+//to do
+//delete this
+//constants
+//global variebles trolololol
+
 //===========================================================================================================
 //==========================================DATA STRUCTURES==================================================
 //===========================================================================================================
@@ -50,6 +55,78 @@ bool stackIsNull()
     {
         return false;
     }
+}
+
+//Check if Stack top is an emtyy list
+bool isStackTopEmptyList()
+{
+    if (stack_ptr->value.startOfList == nullptr)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+
+//returns a number of fields in list [size of list], second argument must be 1. cleaning] constant as #define list minimum size = 1
+int getListCount(ListElement* listSearched, int listSize)
+{
+    if (listSearched->nextListItem == nullptr)
+    {
+        return listSize;
+    }
+
+    return getListCount(listSearched->nextListItem, (listSize + 1));
+}
+
+//returns contents of a list as an integer [helper]
+int readListToIntHelper(ListElement* listSearched, int powerOfTen, int returner)
+{
+    //get current number in list
+    int firstStep = listSearched->value - 48;
+
+    //get current power of 10s e.x. 8 in 1820 is 10^2
+    int secondStep = pow(10, (powerOfTen));
+
+    //add this listElement
+    returner = returner + firstStep * secondStep;
+
+    //end of recursion
+    if (listSearched->nextListItem == nullptr)
+    {
+        return returner;
+    }
+
+    return readListToIntHelper(listSearched->nextListItem, (powerOfTen + 1), (returner));
+}
+
+//returns contents of a list as an integer [main] [helper in other functions] [cleaning] [constants]
+int readListToInt()
+{
+    return readListToIntHelper(stack_ptr->value.startOfList, 0, 0);
+}
+
+//check if there is a minus at the end of the list
+bool endIsMinus(ListElement* stackTopList)
+{
+    //check if we reached end of the list
+    if (stackTopList->nextListItem == nullptr)
+    {
+        if (stackTopList->value == '-')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    //recursion
+    return endIsMinus(stackTopList->nextListItem);
 }
 
 //append value at beggining of the stackTopList
@@ -124,87 +201,47 @@ void show(StackField* currentStackField, int Counter)
     //make pointer to start of the list at this stack field
     ListElement* listIterator = currentStackField->value.startOfList;
 
-    //end ofrecursion when we reached end of the stack
-    if (currentStackField->previous_element == nullptr)
+    //recursion if stackBottom is not reached
+    if (currentStackField->previous_element != nullptr)
     {
-        //printing empty list if list is empty
-        if (listIterator == nullptr)
-        {
-            cout << Counter << ": " << endl;
-            return;
-        }
-        cout << Counter << ": ";
-        printList(listIterator);            //print list on this stack field
-        return;
+        show(currentStackField->previous_element, (Counter + 1));
+    }
+
+    //printing empty list if list is empty
+    if (listIterator == nullptr)
+    {
+       cout << Counter << ": ";
+       cout << endl;
     }
     else
     {
-
-        //change pointer to one layer lower [recursion]
-        currentStackField = currentStackField->previous_element;
-        show(currentStackField, (Counter + 1));
-
-        //printing empty list if list is empty
-        if (listIterator == nullptr)
-        {
-            cout << Counter << ": ";
-            cout << endl;
-        }
-        else
-        {
-            cout << Counter << ": ";
-            printList(listIterator);
-        }
-    }
-    
+        cout << Counter << ": ";
+        printList(listIterator);
+     } 
 }
 
-//put a exact copy of list from top on top of an stack [helper function]
-void copyStackTopHelper(ListElement* startOfList, ListElement* startOfStackList)
+//top list copying [helper function]
+void copyStackTopHelper(ListElement* startOfNewList, ListElement* startOfCopiedList)
 {
-    //ListElement* startOfList -> first pointer to a list.
-    //ListElement* startOfStackList -> first pointer to a list on stack
-
-
-    //if list has reached the end, end recursion
-    //!!!if works this should me moved to the main function
-    if (startOfStackList == nullptr)
+    //end of recursion
+    if (startOfCopiedList->nextListItem == nullptr)
     {
-        //startOfList = nullptr;
-        return;
-    }
-    if (startOfStackList->nextListItem == nullptr)
-    {
-        startOfList->value = startOfStackList->value;
-        startOfList->nextListItem = nullptr;
+        startOfNewList->value = startOfCopiedList->value;
+        startOfNewList->nextListItem = nullptr;
         return;
     }
 
     //copy contents of existing list field
-    startOfList->value = startOfStackList->value; ///[!!!] maybe before if
+    startOfNewList->value = startOfCopiedList->value;
 
     //make new list points to new list element -> instead of copyint pointer to old list
-    startOfList->nextListItem = new ListElement;
+    startOfNewList->nextListItem = new ListElement;
 
     //if everything is done, "recurse" function one more time
-    copyStackTopHelper(startOfList->nextListItem, startOfStackList->nextListItem);
+    copyStackTopHelper(startOfNewList->nextListItem, startOfCopiedList->nextListItem);
 }
 
-//Check if Stack top is an emtyy list
-bool isStackTopEmptyList()
-{
-    if (stack_ptr->value.startOfList == nullptr)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-
-}
-
-//put a exact copy of list from top on top of an stack
+//put a exact copy of list from top on top of an stack [':' command]
 void copyStackTop()
 {
     //check if stacktop is empty
@@ -220,48 +257,40 @@ void copyStackTop()
         return;
     }
 
-    //create new StackField, list with one emptyElement, once again List is already initiated here
+    //create new StackField
     StackField* newField = new StackField;
-    newField->value.startOfList = new ListElement; //need to decide between new ListElement/nullptr
-    newField->value.startOfList->nextListItem = nullptr; //important
-    //getting pointers of our stackfield, NULL if on bottom previous stackfield if not
-   //THIS IF STATEMENT 99% CHANCE DOES NOTHING, FUNCTION ENDS IF NULLPTR
-   if (stack_ptr == nullptr)
-   {
-       newField->previous_element = nullptr;           //first element of stack doesnt have any element below
-   }
-   else
-   {
-        newField->previous_element = stack_ptr;
-   }
-
-    //if copied list is empty, do not copy it
-    if (stack_ptr->value.startOfList == nullptr)
+    newField->value.startOfList = new ListElement; 
+    newField->value.startOfList->nextListItem = nullptr; 
+   
+    //assigning pointers in new StackField
+    if (stack_ptr == nullptr)
     {
-
+        newField->previous_element = nullptr;          
     }
     else
     {
-        ListElement* startOfList = newField->value.startOfList;
-        ListElement* startOfStackList = stack_ptr->value.startOfList;
-        copyStackTopHelper(startOfList, startOfStackList);
+         newField->previous_element = stack_ptr;
     }
-    //list copying mechanic, maybe another function with recursion
 
-    //after everything move stack pointer to the new field
-
+    //copy the list with recursive helper function
+    ListElement* startOfList = newField->value.startOfList;
+    ListElement* startOfStackList = stack_ptr->value.startOfList;
+    copyStackTopHelper(startOfList, startOfStackList);
+    
+    //increase the StackCount, and change pointer to StackTop
     stackCounter++;
     stack_ptr = newField;
 }
 
-//switch top and below lists in places
+//switch top and below lists in places [';' command]
 void switchLists()
 {
-    //error handling --> this can be made into function
+    //error handling
     if (stackIsNull())
     {
         return;
     }
+
     //get pointer to previous element of a bellow field
     StackField* bellowFieldPointer = stack_ptr->previous_element->previous_element;
 
@@ -271,10 +300,13 @@ void switchLists()
     //get pointer to "current" bellow field
     StackField* bellowField = stack_ptr->previous_element;
 
+    //top field points to bottom field pointer
     stack_ptr->previous_element = bellowFieldPointer;
 
+    //bellow field points to current top
     bellowField->previous_element = topField;
 
+    //StackTop is previous field
     stack_ptr = bellowField;
 }
 
@@ -287,12 +319,12 @@ void deleteStackContent(ListElement* listCleaner)
         delete listCleaner;
         return;
     }
-    deleteStackContent(listCleaner->nextListItem); //the correct way chat?
-    delete listCleaner;
 
+    deleteStackContent(listCleaner->nextListItem); 
+    delete listCleaner;
 }
 
-//remove item from the stack
+//remove item from the stack [',' command]
 void pop()
 {
     //error handling
@@ -301,10 +333,10 @@ void pop()
         return;
     }
 
-    //change pointer to top of the stack to element below
+    //get pointer to element that will be deleted
     StackField* cleaner = stack_ptr;
 
-    //if this is bottom of a stack, change stack pointer to NULL
+    //change StackTop pointer
     if (stack_ptr->previous_element == nullptr)
     {
         stack_ptr = nullptr;
@@ -325,48 +357,7 @@ void pop()
     stackCounter--;
 }
 
-//function returning size of list
-//returns a number of fields in list, second argument must be 1, need to think how to redo this
-int getListCount(ListElement* listSearched, int listSize)
-{
-    if (listSearched->nextListItem == nullptr)
-    {
-        return listSize;
-    }
-    //also dlaczego nie dziala tutaj listSize++, a (listSize + 1) już tak   
-    return getListCount(listSearched->nextListItem, (listSize + 1));
-}
-
-//returns contents of a list as an integer [helper]
-int sumUpList(ListElement* listSearched, int powerOfTen, int returner)
-{
-    //listSearched -> beggining of our list
-    //listSize -> number of numbers in the list
-    //listSum -> numerical value of our list, will be returned, maybe we should pass it as 0
-
-    int firstStep = listSearched->value - 48;
-    int secondStep = pow(10, (powerOfTen));
-
-    returner = returner + firstStep * secondStep;
-
-    if (listSearched->nextListItem == nullptr)
-    {
-        return returner;
-    }
-
-    return sumUpList(listSearched->nextListItem, (powerOfTen + 1), (returner));
-}
-
-//returns contents of a list as an integer [main]
-int readListToInt()
-{
-
-    //int listSize = getListCount(stack_ptr->value.startOfList, 1); //not used because of misinterpretation of list
-    int numValue = sumUpList(stack_ptr->value.startOfList, 0, 0);
-    return numValue;
-}
-
-//gives pointer to start of the list on -ish position [helper]
+//gives pointer to start of the list on -ish position [@] [helper]
 StackField* givePointer(StackField* stackPosition, int counter, int destination)
 {
     if (counter == destination)
@@ -379,33 +370,17 @@ StackField* givePointer(StackField* stackPosition, int counter, int destination)
 //will perform '@' action of copying number on stack and then copying list on stack [@]
 void popAndSwitch()
 {
-    
-
-    //read number that is on stack
+    //read number that is on stack, and remove it from stack
     int numberOnStack = readListToInt();
-
-    //if (numberOnStack >= stackCounter || numberOnStack < 0) //[!!!] cleaner way
-    //{
-    //    return;
-    //}
-
-    //remove that list/number from stack
     pop();
-
-    //create new stack field, again List is part of StackField -> also initiated
+    
+    //create new stack field
     StackField* newField = new StackField;
     
-
-
-    //what if we copy empty list
-    
-    //start of list points to nowhere
-    
-
     //append new stackfield to the stack
     if (stack_ptr == nullptr)
     {
-        newField->previous_element = nullptr;           //first element of stack doesnt have any element below
+        newField->previous_element = nullptr;           
     }
     else
     {
@@ -415,7 +390,7 @@ void popAndSwitch()
     //get pointer to ish position
     StackField* numPosition = givePointer(stack_ptr, 0, numberOnStack);
 
-    //debug
+   //if copied list is empty
     if (numPosition->value.startOfList == nullptr)
     {
         newField->value.startOfList = nullptr;
@@ -424,43 +399,29 @@ void popAndSwitch()
         return;
     }
 
+    //create new listElement
     newField->value.startOfList = new ListElement;
     newField->value.startOfList->nextListItem = nullptr;
+
     //list copying 
-    ListElement* startOfList = newField->value.startOfList;                    //this is correct
-    // replace stack_ptr->value.startOfList to something else
-    ListElement* startOfStackList = numPosition->value.startOfList;       //this need to be our i-sh field
-    copyStackTopHelper(startOfList, startOfStackList);
+    ListElement* startOfList = newField->value.startOfList;                    
+    ListElement* startOfCopiedList = numPosition->value.startOfList;      
+    copyStackTopHelper(startOfList, startOfCopiedList);
 
-    //increase stack size counter
+    //increase stackSize, attach pointer
     stackCounter++;
-
-    //attach new stackField as top of the stack
     stack_ptr = newField;
 }
 
-//test function to see if list->int translate function works properly
-void readStackChars(ListElement* listSearched)
-{
-    if (listSearched->nextListItem == nullptr)
-    {
-        cout << listSearched->value;
-        return;
-    }
-    cout << listSearched->value;
-    readStackChars(listSearched->nextListItem);
-}
-
-//read character from standard output and append it on StackTop list
+//read character from standard output and append it on StackTop list [.]
 void readAndAppend()
 {
-    //read a character from the standard output
     cin >> dotCommand;
     appendOnList(dotCommand);
 }
 
-//if there is minus on end of the list on StackTop, delete it [helper function] [list longer than 1]
-void absoluteValueLongList(ListElement* stackTopList)
+//if there is minus on end of the list on StackTop, delete it [helper function] [list longer than 1] [^]
+void absoluteValueLongHelper(ListElement* stackTopList)
 {  
     //if next list element is the last, check if pointer needs fixing
     if (stackTopList->nextListItem->nextListItem == nullptr)
@@ -471,20 +432,21 @@ void absoluteValueLongList(ListElement* stackTopList)
             ListElement* minusListElement = stackTopList->nextListItem;
             stackTopList->nextListItem = nullptr;
             delete minusListElement;
-            return;   
+               
         }
+        return;
     }
     else
     {
-        absoluteValueLongList(stackTopList->nextListItem);
+        absoluteValueLongHelper(stackTopList->nextListItem);
     }
    
 }
 
-//remove minus from end of the list if there is one
+//remove minus from end of the list if there is one [^]
 void absoluteValue(ListElement* thisList, List* stackValue)
 {
-    //if there is nothing on the stack, return
+    //if there is nothing on the stack, return [cleaning double error check]
     if (stackIsNull())
     {
         return;
@@ -496,7 +458,7 @@ void absoluteValue(ListElement* thisList, List* stackValue)
         return;
     }
 
-    //list with one element
+    //list with one element -> delete this element from stack
     if (thisList->nextListItem == nullptr)
     {
         if (thisList->value == '-')
@@ -508,25 +470,8 @@ void absoluteValue(ListElement* thisList, List* stackValue)
         return;
     }
 
-    absoluteValueLongList(thisList);
-}
-
-//check if there is a minus at the end of the list
-bool endIsMinus(ListElement* stackTopList)
-{
-    //check if we reached end of the list
-    if (stackTopList->nextListItem == nullptr)
-    {
-        if (stackTopList->value == '-')
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return endIsMinus(stackTopList->nextListItem);
+    //helper recursive function
+    absoluteValueLongHelper(thisList);
 }
 
 //add minus at the end of the list [helper]
@@ -563,16 +508,16 @@ void addMinusAtEnd()
 //negation of top of the stack
 void negate(ListElement* thisList)
 {
-    //rror handling -> operation on an empty stack
+    //error handling -> operation on an empty stack
     if (stackIsNull())
     {
         return;
     }
 
-    //emptylistcheckdumbbbbb
+    //error handling -> list is empty
     if (stack_ptr->value.startOfList == nullptr)
     {
-        addMinusAtEnd();
+        appendOnList('-');
         return;
     }
 
@@ -587,10 +532,10 @@ void negate(ListElement* thisList)
     }
 }
 
-//print first character on a list and then pop the list
+//print first character on a list and then pop the list [>]
 void printAndDelete()
 {
-    //check if stackmis empty
+    //check if stackmis empty  [cleaning] [first real double errorcheck]
     if (stackIsNull())
     {
         return;
@@ -609,10 +554,10 @@ void printAndDelete()
     pop();
 }
 
-//detach first character from the list, append it to new list on top of the stack
+//detach first character from the list, append it to new list on top of the stack [$]
 void detachAndAppend()
 {
-    //check if stackmis empty
+    //check if stackmis empty  [cleaning] [double errorcheck]
     if (stackIsNull())
     {
         return;
@@ -637,12 +582,14 @@ void detachAndAppend()
 
     //case with more than one element list
 
-    //get pointer to start of the list ?
+    //get pointer to start of the list
     ListElement* startOfList = stack_ptr->value.startOfList;
+
     //get character from beggining of the list
     char firstChar = stack_ptr->value.startOfList->value;
     //change List beggining
     stack_ptr->value.startOfList = stack_ptr->value.startOfList->nextListItem;
+    //delete first list element (detached)
     delete startOfList;
 
 
@@ -650,10 +597,10 @@ void detachAndAppend()
     appendOnList(firstChar);
 }
 
-//reads list as number from StackTop, pops and attaches new list with single character
+//reads list as number from StackTop, pops and attaches new list with single character [']']
 void readNumToChar()
 {
-    //error handling -> stack is empty
+    //error handling -> stack is empty  [cleaning] [double error]
     if (stackIsNull())
     {
         return;
@@ -678,8 +625,8 @@ void readNumToChar()
     appendOnList(A);
 }
 
-//returns integrer of power
-int myTenPow(int base, int exponent, int counterOne)
+//power function, returning integrers, used in powers of 10 [readchartonum helper]
+int myTenPow(int base, int exponent, int counterOne) //[cleaning definfe]
 {
     if (exponent == 0)
     {
@@ -692,13 +639,13 @@ int myTenPow(int base, int exponent, int counterOne)
     }
 
     return myTenPow((base * 10), exponent, (counterOne + 1));
-
 }
 
-//translate given int ex. 1234 to list 4->3->2->1. puts it on given stack ptr.
-void translateNumberToList(int translator, int iterator, ListElement* Listend)
+//translate given int ex. 1234 to list 4->3->2->1. puts it on given stack ptr. [readCharToNum helper]
+void translateIntegerToList(int translator, int iterator, ListElement* Listend)
 {
     int singleDigit;
+
     //get single digit number
     singleDigit = translator % myTenPow(10, iterator, 1) / myTenPow(10, iterator-1, 1);
 
@@ -712,7 +659,7 @@ void translateNumberToList(int translator, int iterator, ListElement* Listend)
     Listend->value = ch;
     Listend->nextListItem = nullptr;
 
-    //check end of recursion
+    //check end of recursion, if translator == 0, whole number is translated
     if (translator == 0)
     {
         return;
@@ -721,16 +668,15 @@ void translateNumberToList(int translator, int iterator, ListElement* Listend)
     //if not create new listElement and go forward
     ListElement* nextListElement = new ListElement;
     Listend->nextListItem = nextListElement;
-
-    //once again
     
-    translateNumberToList(translator, (iterator + 1), nextListElement);     
+    //recursion
+    translateIntegerToList(translator, (iterator + 1), nextListElement);
 }
 
-//pop StackTop, put on stack list with number equal to ASCII of first character
+//pop StackTop, put on stack list with number equal to ASCII of first character ['[']
 void readCharToNum()
 {
-    //error handling -> stack is empty
+    //error handling -> stack is empty [cleaning] [double error]
     if (stackIsNull())
     {
         return;
@@ -746,7 +692,7 @@ void readCharToNum()
     char A = stack_ptr->value.startOfList->value;
 
     //convert char to int
-    int convert = int(A);
+    int convertedChar = int(A);
 
     //remove list from top
     pop();
@@ -757,24 +703,12 @@ void readCharToNum()
     //put empty listelement at start of the list
     stack_ptr->value.startOfList = new ListElement;
 
-    //put "number A" on top of the list
-    translateNumberToList(convert, 1, stack_ptr->value.startOfList);
-}
-
-//get pointer to the last element at the List
-ListElement* getEndListPointer(ListElement* ourList)
-{
-    //end of recursion
-    if (ourList->nextListItem == nullptr)
-    {
-        return ourList;
-    }
-
-    return getEndListPointer(ourList->nextListItem);
+    //put "number A" on top of the list [cleaning] [define]
+    translateIntegerToList(convertedChar, 1, stack_ptr->value.startOfList);
 }
 
 //copy the list
-void cpyList(ListElement* copier, ListElement* destination)
+void copyList(ListElement* copier, ListElement* destination)
 {
     //create new list element
     destination->nextListItem = new ListElement;
@@ -789,31 +723,41 @@ void cpyList(ListElement* copier, ListElement* destination)
         return;
     }
 
-    cpyList(copier->nextListItem, destination->nextListItem);
+    copyList(copier->nextListItem, destination->nextListItem);
 }
 
-//pop list, attach it's copy at end of the previous list
+//get pointer to the last element at the List
+ListElement* getEndListPointer(ListElement* ourList)
+{
+    //end of recursion
+    if (ourList->nextListItem == nullptr)
+    {
+        return ourList;
+    }
+
+    return getEndListPointer(ourList->nextListItem);
+}
+
+//pop list, attach it's copy at end of the previous list [#]
 void reAttach()
 {
-    //[!!!] propably some error handling could be nice
-
-    //get pointer to end of previous list
-    ListElement* endOfPrevious = getEndListPointer(stack_ptr->previous_element->value.startOfList);
-
-    //error Handling
+    //error Handling [cleaning] [double error handle]
     if (stack_ptr->value.startOfList == nullptr)
     {
         return;
     }
 
+    //get pointer to end of previous list
+    ListElement* endOfPrevious = getEndListPointer(stack_ptr->previous_element->value.startOfList);
+
     //copy the current list to the end of previous list
-    cpyList(stack_ptr->value.startOfList, endOfPrevious);
+    copyList(stack_ptr->value.startOfList, endOfPrevious);
 
     //pop the stacklist
     pop();
 }
 
-//read instruction pointer as number, attach this number as list at the end of the stack
+//read instruction pointer as number, attach this number as list at the end of the stack [~]
 void putPtrValueOnStack()
 {
     //get number of instruction
@@ -826,11 +770,10 @@ void putPtrValueOnStack()
     stack_ptr->value.startOfList = new ListElement;
 
     //put "number A" on top of the list
-    translateNumberToList(convert, 1, stack_ptr->value.startOfList);
-
+    translateIntegerToList(convert, 1, stack_ptr->value.startOfList);
 }
 
-//if StackTop is empty or have only 0, replace with 1, otherwise, replace with 0
+//if StackTop is empty or have only 0, replace with 1, otherwise, replace with 0 [!]
 void logicalNegation()
 {
     //check if StackTop is empty
@@ -900,7 +843,7 @@ bool isZero(ListElement* thisList)
         return true;
     }
 
-    //if not, go further
+    //recursion
     return isZero(thisList->nextListItem);
 }
 
@@ -934,7 +877,7 @@ void addMinus(ListElement* thisList)
     addMinus(thisList->nextListItem);
 }
 
-//true if every next element of the list is zero, false otherwise
+//true if every next element of the list is zero, false otherwise [deleteZeroes helper]
 bool everyNextElementIsZero(ListElement* thisList)
 {
     //false condition
@@ -953,18 +896,14 @@ bool everyNextElementIsZero(ListElement* thisList)
     return everyNextElementIsZero(thisList->nextListItem);
 }
 
-//go through rest of the list, if everything will be zero delete everything (from the end)
-//it will delete everything from this point, just need to isEveryElementNextZero(to be true)
+//it will delete all zeroes to the end of the list [deleteZeroes helper]
 void deleteZeroes(ListElement* thisList)
 {
-
     //recursion end check if you are at the end of the list
     if (thisList->nextListItem->nextListItem != nullptr)
     {
         deleteZeroes(thisList->nextListItem);
     }
-
-    //propably helper function will be needed
 
     ListElement* zeroEndList = thisList->nextListItem;
     thisList->nextListItem = nullptr;
@@ -972,13 +911,9 @@ void deleteZeroes(ListElement* thisList)
     //deleting only if next is nullptr
 }
 
-//iterate thru list, deleting streak of zeroes at the end
+//iterate thru list, deleting streak of zeroes at the end [deleteZeroes helper]
 void deleteZeroesListIterator(ListElement* thisList)
-{
-    //pointer problems
-    // next vs current one
-    // needs fixing
-    
+{   
     //when we reached end of the list, end function
     if (thisList->nextListItem == nullptr)
     {
@@ -992,7 +927,6 @@ void deleteZeroesListIterator(ListElement* thisList)
         {
             deleteZeroes(thisList);
         }
-        
     }
 
     if (thisList->nextListItem == nullptr)
@@ -1025,12 +959,11 @@ void deleteZeroesMain(ListElement* thisList)
     {
         //remove zeroes from end of the list [main task]
         deleteZeroesListIterator(thisList);
-
         return;
     }
 }
 
-//returns size of a list as integer number, size in declaration must be one
+//returns size of a list as integer number, size in declaration must be one [cleaning magic number]
 int returnListSize(ListElement* thisList, int size)
 {
     //if reached end of the list
@@ -1040,13 +973,6 @@ int returnListSize(ListElement* thisList, int size)
     }
 
     return returnListSize(thisList->nextListItem, (size + 1));
-
-}
-
-//compares lenght of two lists [compare]
-bool AreSameSize()
-{
-    return true;
 }
 
 //helper function comparing lists char by char returns 1->toplist bigger  2-> bottom bigger  3->equal
@@ -1076,7 +1002,7 @@ int CompareCharByCharHelper(ListElement* topList, ListElement* bottomList, int c
 //compares two lists char by char [compare], only when both are positive or negative returns 1->toplist bigger  2-> bottom bigger  3->equal
 int CompareCharByChar(ListElement* topList, ListElement* bottomList)
 {
-    //once again minuses are pain so we can remove them temporarly
+    //once again minuses are troublesome so we can remove them temporarly
     if ((isNegative(topList) == 1) && (isNegative(bottomList) == 1))
     {
         //remove minusus for comparison
@@ -1086,19 +1012,18 @@ int CompareCharByChar(ListElement* topList, ListElement* bottomList)
         //1->toplist bigger  2-> bottom bigger  3->equal
         int result = CompareCharByCharHelper(topList, bottomList, 3);
 
-
         //add minuses after everything
         addMinus(topList);
         addMinus(bottomList);
 
         return result;
     }
+    //both positive
     else
     {
         int result = CompareCharByCharHelper(topList, bottomList, 3);
         return result;
     }
-
 }
 
 //returns true if any list is empty or zero returns 1->toplist bigger  2-> bottom bigger  3->equal
@@ -1151,14 +1076,14 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList)
     }
 
     //otherwise 
-    return 10;
+    return 10;// [cleaning big magic number] 1,2,3,10, also is there a way for better
 }
 
 //main function for comparing two functions, [returns 1 if toplist is bigger, 2 if bottom one, 3 if equal], lists shouldn't be empty
 //what about zeroes and empty lists warning: control may reach end of non-void function [-Wreturn-type]
 int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 {
-
+    //[cleaning] [define]
     //=======CASE 0, POSITIVE AND NEGATIVE===================
     if ((isNegative(topList) == 1) && (isNegative(bottomList) == 0))
     {
@@ -1249,6 +1174,8 @@ void popSecondStackField()
 //in case of one or two list being zero or empty, add Those lists accordingly [is this needed?] [maybe only the empty lists]    
 bool plusCommandErrorHandling()
 {
+    //[cleaning] look at it for 5 seconds maybe zeroes are not needed at least
+    // //test on stos ofc
     //case 1 both lists are empty
     if (stack_ptr->value.startOfList == nullptr && stack_ptr->previous_element->value.startOfList == nullptr)
     {
@@ -1304,6 +1231,7 @@ bool plusCommandErrorHandling()
 //end of adding carry handle in the bigger list
 void carryHandleBiggerList(ListElement* biggerList, int carry)
 {
+    //cleaning defines
     //if our value + carry > 9
     if ((biggerList->value - 48) + carry > 9)
     {
@@ -1371,6 +1299,7 @@ void addingPositives(ListElement* biggerList, ListElement* smallerList, int carr
     addingPositives(biggerList->nextListItem, smallerList->nextListItem, carry);
 }
 
+//cleaning the stack after [+], removing not needed list
 void addingStackClean(ListElement* biggerList)
 {
     //if the "bottom list" became top one, remove top
@@ -1583,15 +1512,10 @@ int main()
     //iterating through all program instructions
     while (mem_ptr[ptr_value] != '\0')
     {
-        //[!!!] debug
-       //cout << ptr_value << " ";
-        //show(stack_ptr, 0);
+        
         switch (mem_ptr[ptr_value])
         {
-            
-            
-
-            case '\''://push empty list on the stack
+            case '\'':
             {
                 push();
                 ptr_value++;
@@ -1600,8 +1524,8 @@ int main()
 
             case '&':
             {
-                int stackCpy = 0; //!!! zamiana z stackCounter
-                StackField* currentStackField = stack_ptr;   //our inside pointer that will iterate thru all stack
+                int stackCpy = 0; 
+                StackField* currentStackField = stack_ptr;   
                 show(currentStackField, stackCpy);
                 ptr_value++;
                 break;
@@ -1631,15 +1555,7 @@ int main()
 
             case '@':
             {
-
                 popAndSwitch();
-                /*
-                //test dlugosci listy
-                cout << "liczba na stosie [INT]: " << readListToInt() << endl;
-                cout << "liczba na stosie [CHAR]: ";
-                readStackChars(stack_ptr->value.startOfList);
-                cout << endl;
-                */
                 ptr_value++;
                 break;
             }
@@ -1714,7 +1630,7 @@ int main()
                 break;
             }
 
-            //very easily new function
+            //very easily new function [cleaning]
             case '=':
             {
                 
@@ -1773,7 +1689,7 @@ int main()
 
             }
 
-            //very easily new function
+            //very easily new function [cleaning]
             case '<':
             {
                 if (compareTwoListsMainError(stack_ptr->value.startOfList, stack_ptr->previous_element->value.startOfList) != 10)
@@ -1831,7 +1747,7 @@ int main()
 
             case '?':
             {
-                //move to function
+                //move to function [cleaning]
                 int replacer = readListToInt();
                 pop();
 
