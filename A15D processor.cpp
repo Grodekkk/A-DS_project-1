@@ -3,20 +3,25 @@
 
 using namespace std;
 
+#define MAX_PROGRAM_SIZE 20000
+#define CHAR_NUM_PREFIX 48
+#define BORROWED_VALUE 10
+#define TOP_LIST_BIGGER 1
+//1,2,3,10 compare
 //constants
-//global variebles trolololol
-//check defines for stack top and stack bellow
+//toplist i bottom list w '+' jako po prostu wskazniki
+//funkcje ze switcha do osobnych
 
-//===========================================================================================================
-//==========================================DATA STRUCTURES==================================================
-//===========================================================================================================
+//=============================================================================================================================================
+//==========================================DATA STRUCTURES====================================================================================
+//=============================================================================================================================================
 
 struct StackField;
 struct ListElement;
 
 struct Stack            //cleaning zamiana nazw na lepsze i tak bd od teraz przedrostek stack
 {
-    char program_mem[20000];
+    char program_mem[MAX_PROGRAM_SIZE];
     char* mem_ptr;
     int ptr_value;
     int stackCounter;          //shows current elements on stack, no elements and one elements count as zero need to be aware of that
@@ -99,7 +104,7 @@ int getListCount(ListElement* listSearched, int listSize)
 int readListToIntHelper(ListElement* listSearched, int powerOfTen, int returner)
 {
     //get current number in list
-    int firstStep = listSearched->value - 48;
+    int firstStep = listSearched->value - CHAR_NUM_PREFIX;
 
     //get current power of 10s e.x. 8 in 1820 is 10^2
     int secondStep = pow(10, (powerOfTen));
@@ -670,7 +675,7 @@ void translateIntegerToList(int translator, int iterator, ListElement* Listend)
     translator = translator - translator % myTenPow(10, iterator, 1);
 
     //turn "single digit" into 'char'
-    char ch = 48 + singleDigit;
+    char ch = CHAR_NUM_PREFIX + singleDigit;
 
     //get the single digit at the list [NEW FUNCTION APPEND AT END]
     Listend->value = ch;
@@ -999,7 +1004,7 @@ int CompareCharByCharHelper(ListElement* topList, ListElement* bottomList, int c
     //every next list item is x10 bigger number so final bigger will decide
     if (topList->value > bottomList->value)
     {
-        code = 1;
+        code = TOP_LIST_BIGGER;
     }
 
     if(topList->value < bottomList->value)
@@ -1059,7 +1064,7 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     }
     if (Stack->top_ptr->value.startOfList != nullptr && Stack->top_ptr->previous_element->value.startOfList == nullptr)
     {
-        return 1;
+        return TOP_LIST_BIGGER;
     }
 
     //if both lists are zero, return 3
@@ -1071,7 +1076,7 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     // top->0   bottom->-10   return 1
     if (isZero(topList) == 1 && isNegative(bottomList) == 1)
     {
-        return 1;
+        return TOP_LIST_BIGGER;
     }
 
     // top->0   bottom->10   return 2
@@ -1089,7 +1094,7 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     // top->1   bottom->0   return 1
     if (isNegative(topList) == 0 && isZero(bottomList) == 1)
     {
-        return 1;
+        return TOP_LIST_BIGGER;
     }
 
     //otherwise 
@@ -1109,7 +1114,7 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 
     if ((isNegative(topList) == 0) && (isNegative(bottomList) == 1))
     {
-        return 1;
+        return TOP_LIST_BIGGER;
     }
 
     //check size of both lists
@@ -1121,7 +1126,7 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
         //if one of the lists are longer
         if (listA > listB)
         {
-            return 1;
+            return TOP_LIST_BIGGER;
         }
         
         if (listA < listB)
@@ -1140,7 +1145,7 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
         //if one of the lists are longer
         if (listA < listB)
         {
-            return 1;
+            return TOP_LIST_BIGGER;
         }
 
         if (listA > listB)
@@ -1150,9 +1155,9 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 
         if (CompareCharByChar(topList, bottomList) == 2)
         {
-            return 1;
+            return TOP_LIST_BIGGER;
         }
-        else if (CompareCharByChar(topList, bottomList) == 1)
+        else if (CompareCharByChar(topList, bottomList) == TOP_LIST_BIGGER)
         {
             return 2;
         }
@@ -1272,9 +1277,9 @@ void carryHandleBiggerList(ListElement* biggerList, int carry)
 {
     //cleaning defines
     //if our value + carry > 9
-    if ((biggerList->value - 48) + carry > 9)
+    if ((biggerList->value - CHAR_NUM_PREFIX) + carry > 9)
     {
-        biggerList->value = (((biggerList->value - 48) + carry) % 10) + 48;
+        biggerList->value = (((biggerList->value - CHAR_NUM_PREFIX) + carry) % 10) + CHAR_NUM_PREFIX;
         carry = 1;
     }
     else
@@ -1300,15 +1305,15 @@ void addingPositives(ListElement* biggerList, ListElement* smallerList, int carr
 {
     //adding current stackElements -> checking if there is number to carry
     //carry handle
-    if ((biggerList->value - 48) + (smallerList->value - 48) + carry > 9)
+    if ((biggerList->value - CHAR_NUM_PREFIX) + (smallerList->value - CHAR_NUM_PREFIX) + carry > 9)
     {
         //biggerlist will have modulo 10 of current num
-        biggerList->value = (((biggerList->value - 48) + (smallerList->value - 48) + carry) % 10) + 48;
+        biggerList->value = (((biggerList->value - CHAR_NUM_PREFIX) + (smallerList->value - CHAR_NUM_PREFIX) + carry) % 10) + CHAR_NUM_PREFIX;
         carry = 1;
     }
     else
     {
-        biggerList->value = biggerList->value - 48 + smallerList->value + carry;
+        biggerList->value = biggerList->value - CHAR_NUM_PREFIX + smallerList->value + carry;
         carry = 0;
     }
 
@@ -1356,9 +1361,9 @@ void addingStackClean(ListElement* biggerList, Stack* Stack)
 void substractionHelperBiggerList(ListElement* biggerList, int borrow)
 {
     //if borrowing is needed
-    if (biggerList->value - borrow - 48 < 0)
+    if (biggerList->value - borrow - CHAR_NUM_PREFIX < 0)
     {
-        biggerList->value = (biggerList->value - 1 + 10);
+        biggerList->value = (biggerList->value - 1 + BORROWED_VALUE);
         borrow = 1;
     }
     //if borrowing is not needed
@@ -1379,12 +1384,12 @@ void substractionHelper(ListElement* biggerList, ListElement* smallerList, int b
     //potential bugger -> what if 
     if ((biggerList->value - smallerList->value - borrow) < 0)
     {
-        biggerList->value = biggerList->value - smallerList->value - borrow + 10 + 48;
+        biggerList->value = biggerList->value - smallerList->value - borrow + BORROWED_VALUE + CHAR_NUM_PREFIX;
         borrow = 1;
     }
     else
     {
-        biggerList->value = biggerList->value - smallerList->value - borrow + 48;
+        biggerList->value = biggerList->value - smallerList->value - borrow + CHAR_NUM_PREFIX;
         borrow = 0;
     }
 
@@ -1422,7 +1427,7 @@ void handlesubtraction(Stack* Stack)
     ListElement* bigger;
     ListElement* smaller;
 
-    if (compareTwoListsMain(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList) == 1)
+    if (compareTwoListsMain(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList) == TOP_LIST_BIGGER)
     {
         bigger = Stack->top_ptr->value.startOfList;
         smaller = Stack->top_ptr->previous_element->value.startOfList;
@@ -1481,7 +1486,7 @@ void addStackTopLists(Stack* Stack)
     //see if this will be needed, maybe we can also dodge that
     ListElement* bigger;
     ListElement* smaller;
-    if (compareTwoListsMain(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList) == 1)
+    if (compareTwoListsMain(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList) == TOP_LIST_BIGGER)
     {
         bigger = Stack->top_ptr->value.startOfList;
         smaller = Stack->top_ptr->previous_element->value.startOfList;
@@ -1730,7 +1735,7 @@ int main()
             {
                 if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) != 10)
                 {
-                    if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) == 1)
+                    if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) == TOP_LIST_BIGGER)
                     {
                         pop(&Stack);
                         pop(&Stack);
@@ -1755,7 +1760,7 @@ int main()
                     deleteZeroesMain(Stack.top_ptr->value.startOfList);
                     deleteZeroesMain(Stack.top_ptr->previous_element->value.startOfList);
 
-                    if (compareTwoListsMain(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList) == 1)
+                    if (compareTwoListsMain(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList) == TOP_LIST_BIGGER)
                     {
                         pop(&Stack);
                         pop(&Stack);
