@@ -7,10 +7,11 @@ using namespace std;
 #define CHAR_NUM_PREFIX 48
 #define BORROWED_VALUE 10
 #define TOP_LIST_BIGGER 1
-//1,2,3,10 compare
-//constants
-//toplist i bottom list w '+' jako po prostu wskazniki
-//funkcje ze switcha do osobnych
+#define BOTTOM_LIST_BIGGER 2
+#define LISTS_EQUAL 3
+#define LIST_COMPARE_NO_ERRORS 10
+#define COUNTER_ZERO 0
+#define COUNTER_START_ONE 1
 
 //=============================================================================================================================================
 //==========================================DATA STRUCTURES====================================================================================
@@ -19,14 +20,14 @@ using namespace std;
 struct StackField;
 struct ListElement;
 
-struct Stack            //cleaning zamiana nazw na lepsze i tak bd od teraz przedrostek stack
+struct Stack
 {
     char program_mem[MAX_PROGRAM_SIZE];
     char* mem_ptr;
     int ptr_value;
-    int stackCounter;          //shows current elements on stack, no elements and one elements count as zero need to be aware of that
+    int stackCounter;          
     char dotCommand;
-    StackField* top_ptr;                        //points to top of a stack [cleaning -> zamiana na top_ptr]
+    StackField* top_ptr;                        
 };
 
 
@@ -55,14 +56,13 @@ struct StackField
 //initializing program and stack
 void initializeStack(Stack* Stack)
 {
-    Stack->mem_ptr = Stack->program_mem;    //[error]
+    Stack->mem_ptr = Stack->program_mem;    
     Stack->ptr_value = 0;
     Stack->stackCounter = -1;
     Stack->top_ptr = nullptr;
 }
 
 //returns 1 if stack is empty, 0 otherwise
-//[cleaning] can be made a part of bigger function errorhandling
 bool stackIsNull(Stack* Stack)
 {
     if (Stack->top_ptr == nullptr)
@@ -86,10 +86,22 @@ bool isStackTopEmptyList(Stack* Stack)
     {
         return false;
     }
-
 }
 
-//returns a number of fields in list [size of list], second argument must be 1. cleaning] constant as #define list minimum size = 1
+//combined error handling -> if stackTop is empty or stackisNull, return 1
+bool StackIsNullOrEmpty(Stack* Stack)
+{
+    if (stackIsNull(Stack) || isStackTopEmptyList(Stack))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+//returns a number of fields in list [size of list], second argument must be 1 when calling
 int getListCount(ListElement* listSearched, int listSize)
 {
     if (listSearched->nextListItem == nullptr)
@@ -121,10 +133,10 @@ int readListToIntHelper(ListElement* listSearched, int powerOfTen, int returner)
     return readListToIntHelper(listSearched->nextListItem, (powerOfTen + 1), (returner));
 }
 
-//returns contents of a list as an integer [main] [helper in other functions] [cleaning] [constants]
+//returns contents of a list as an integer [main] [helper in other functions]
 int readListToInt(Stack* Stack)
 {
-    return readListToIntHelper(Stack->top_ptr->value.startOfList, 0, 0);
+    return readListToIntHelper(Stack->top_ptr->value.startOfList, COUNTER_ZERO, COUNTER_ZERO);
 }
 
 //check if there is a minus at the end of the list
@@ -207,7 +219,7 @@ void printList(ListElement* listIterator)
     printList(listIterator->nextListItem);
 }
 
-//print stack content [& command]
+//print stack content [&] command
 void show(StackField* currentStackField, int Counter, Stack* Stack)
 {
     //error handling [cleaning if you really don't have what to do]
@@ -259,7 +271,7 @@ void copyStackTopHelper(ListElement* startOfNewList, ListElement* startOfCopiedL
     copyStackTopHelper(startOfNewList->nextListItem, startOfCopiedList->nextListItem);
 }
 
-//put a exact copy of list from top on top of an stack [':' command]
+//put a exact copy of list from top on top of an stack [:] command
 void copyStackTop(Stack* Stack)
 {
     //check if stacktop is empty
@@ -300,7 +312,7 @@ void copyStackTop(Stack* Stack)
     Stack->top_ptr = newField;
 }
 
-//switch top and below lists in places [';' command]
+//switch top and below lists in places [;] command
 void switchLists(Stack* Stack)
 {
     //error handling
@@ -468,17 +480,12 @@ void absoluteValueLongHelper(ListElement* stackTopList)
 //remove minus from end of the list if there is one [^]
 void absoluteValue(ListElement* thisList, List* stackValue, Stack* Stack)
 {
-    //if there is nothing on the stack, return [cleaning double error check]
-    if (stackIsNull(Stack))
+    //check if stack is null or containing empty list at the top
+    if (StackIsNullOrEmpty(Stack))
     {
         return;
     }
-
-    //if stack has an empty list, return
-    if (thisList == nullptr)
-    {
-        return;
-    }
+    
 
     //list with one element -> delete this element from stack
     if (thisList->nextListItem == nullptr)
@@ -557,14 +564,8 @@ void negate(ListElement* thisList, Stack* Stack)
 //print first character on a list and then pop the list [>]
 void printAndDelete(Stack* Stack)
 {
-    //check if stackmis empty  [cleaning] [first real double errorcheck]
-    if (stackIsNull(Stack))
-    {
-        return;
-    }
-
-    //check if list is empty
-    if (Stack->top_ptr->value.startOfList == nullptr)
+    //check if stack is null or containing empty list at the top
+    if (StackIsNullOrEmpty(Stack))
     {
         return;
     }
@@ -579,14 +580,8 @@ void printAndDelete(Stack* Stack)
 //detach first character from the list, append it to new list on top of the stack [$]
 void detachAndAppend(Stack* Stack)
 {
-    //check if stackmis empty  [cleaning] [double errorcheck]
-    if (stackIsNull(Stack))
-    {
-        return;
-    }
-
-    //check if list is empty
-    if (Stack->top_ptr->value.startOfList == nullptr)
+    //check if stack is null or containing empty list
+    if (StackIsNullOrEmpty(Stack))
     {
         return;
     }
@@ -622,14 +617,8 @@ void detachAndAppend(Stack* Stack)
 //reads list as number from StackTop, pops and attaches new list with single character [']']
 void readNumToChar(Stack* Stack)
 {
-    //error handling -> stack is empty  [cleaning] [double error]
-    if (stackIsNull(Stack))
-    {
-        return;
-    }
-
-    //error handling -> StackTop is an empty list
-    if (Stack->top_ptr->value.startOfList == nullptr)
+    //check if stack is null or containing empty list at the top
+    if (StackIsNullOrEmpty(Stack))
     {
         return;
     }
@@ -648,7 +637,7 @@ void readNumToChar(Stack* Stack)
 }
 
 //power function, returning integrers, used in powers of 10 [readchartonum helper]
-int myTenPow(int base, int exponent, int counterOne) //[cleaning definfe]
+int myTenPow(int base, int exponent, int counterOne) 
 {
     if (exponent == 0)
     {
@@ -698,14 +687,8 @@ void translateIntegerToList(int translator, int iterator, ListElement* Listend)
 //pop StackTop, put on stack list with number equal to ASCII of first character ['[']
 void readCharToNum(Stack* Stack)
 {
-    //error handling -> stack is empty [cleaning] [double error]
-    if (stackIsNull(Stack))
-    {
-        return;
-    }
-
-    //error handling -> StackTop is an empty list
-    if (Stack->top_ptr->value.startOfList == nullptr)
+    //check if stack is null or containing empty list at the top
+    if (StackIsNullOrEmpty(Stack))
     {
         return;
     }
@@ -725,8 +708,8 @@ void readCharToNum(Stack* Stack)
     //put empty listelement at start of the list
     Stack->top_ptr->value.startOfList = new ListElement;
 
-    //put "number A" on top of the list [cleaning] [define]
-    translateIntegerToList(convertedChar, 1, Stack->top_ptr->value.startOfList);
+    //put "number A" on top of the list
+    translateIntegerToList(convertedChar, COUNTER_START_ONE, Stack->top_ptr->value.startOfList);
 }
 
 //copy the list
@@ -763,7 +746,7 @@ ListElement* getEndListPointer(ListElement* ourList)
 //pop list, attach it's copy at end of the previous list [#]
 void reAttach(Stack* Stack)
 {
-    //error Handling [cleaning] [double error handle]
+    //error Handling
     if (Stack->top_ptr->value.startOfList == nullptr)
     {
         return;
@@ -792,7 +775,7 @@ void putPtrValueOnStack(Stack* Stack)
     Stack->top_ptr->value.startOfList = new ListElement;
 
     //put "number A" on top of the list
-    translateIntegerToList(convert, 1, Stack->top_ptr->value.startOfList);
+    translateIntegerToList(convert, COUNTER_START_ONE, Stack->top_ptr->value.startOfList);
 }
 
 //if StackTop is empty or have only 0, replace with 1, otherwise, replace with 0 [!]
@@ -933,7 +916,7 @@ void deleteZeroes(ListElement* thisList)
     //deleting only if next is nullptr
 }
 
-//iterate thru list, deleting streak of zeroes at the end [deleteZeroes helper]
+//iterate the list, deleting streak of zeroes at the end [deleteZeroes helper]
 void deleteZeroesListIterator(ListElement* thisList)
 {   
     //when we reached end of the list, end function
@@ -985,7 +968,7 @@ void deleteZeroesMain(ListElement* thisList)
     }
 }
 
-//returns size of a list as integer number, size in declaration must be one [cleaning magic number]
+//returns size of a list as integer number, size in declaration must be one
 int returnListSize(ListElement* thisList, int size)
 {
     //if reached end of the list
@@ -1009,7 +992,7 @@ int CompareCharByCharHelper(ListElement* topList, ListElement* bottomList, int c
 
     if(topList->value < bottomList->value)
     {
-        code = 2;
+        code = BOTTOM_LIST_BIGGER;
     }
 
     //end of recursion
@@ -1032,7 +1015,7 @@ int CompareCharByChar(ListElement* topList, ListElement* bottomList)
         removeMinus(bottomList);
         
         //1->toplist bigger  2-> bottom bigger  3->equal
-        int result = CompareCharByCharHelper(topList, bottomList, 3);
+        int result = CompareCharByCharHelper(topList, bottomList, LISTS_EQUAL);
 
         //add minuses after everything
         addMinus(topList);
@@ -1043,7 +1026,7 @@ int CompareCharByChar(ListElement* topList, ListElement* bottomList)
     //both positive
     else
     {
-        int result = CompareCharByCharHelper(topList, bottomList, 3);
+        int result = CompareCharByCharHelper(topList, bottomList, LISTS_EQUAL);
         return result;
     }
 }
@@ -1054,13 +1037,13 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     //if both lists are equal, return 3
     if (Stack->top_ptr->value.startOfList == nullptr && Stack->top_ptr->previous_element->value.startOfList == nullptr)
     {
-        return 3;
+        return LISTS_EQUAL;
     }
 
     //if one of them is null
     if (Stack->top_ptr->value.startOfList == nullptr && Stack->top_ptr->previous_element->value.startOfList != nullptr)
     {
-        return 2;
+        return BOTTOM_LIST_BIGGER;
     }
     if (Stack->top_ptr->value.startOfList != nullptr && Stack->top_ptr->previous_element->value.startOfList == nullptr)
     {
@@ -1070,7 +1053,7 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     //if both lists are zero, return 3
     if (isZero(topList) == 1 && isZero(bottomList) == 1)
     {
-        return 3;
+        return LISTS_EQUAL;
     }
 
     // top->0   bottom->-10   return 1
@@ -1082,13 +1065,13 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     // top->0   bottom->10   return 2
     if (isZero(topList) == 1 && isNegative(bottomList) == 0)
     {
-        return 2;
+        return BOTTOM_LIST_BIGGER;
     }
 
     // top->-1   bottom->0   return 2
     if (isNegative(topList) == 1 && isZero(bottomList) == 1)
     {
-        return 2;
+        return BOTTOM_LIST_BIGGER;
     }
 
     // top->1   bottom->0   return 1
@@ -1098,7 +1081,7 @@ int compareTwoListsMainError(ListElement* topList, ListElement* bottomList, Stac
     }
 
     //otherwise 
-    return 10;// [cleaning big magic number] 1,2,3,10, also is there a way for better
+    return LIST_COMPARE_NO_ERRORS;// [cleaning big magic number] 1,2,3,10, also is there a way for better
 }
 
 //main function for comparing two functions, [returns 1 if toplist is bigger, 2 if bottom one, 3 if equal], lists shouldn't be empty
@@ -1109,7 +1092,7 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
     //=======CASE 0, POSITIVE AND NEGATIVE===================
     if ((isNegative(topList) == 1) && (isNegative(bottomList) == 0))
     {
-        return 2;
+        return BOTTOM_LIST_BIGGER;
     }
 
     if ((isNegative(topList) == 0) && (isNegative(bottomList) == 1))
@@ -1131,7 +1114,7 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
         
         if (listA < listB)
         {
-            return 2;
+            return BOTTOM_LIST_BIGGER;
         }
 
         return CompareCharByChar(topList, bottomList);
@@ -1150,45 +1133,102 @@ int compareTwoListsMain(ListElement* topList, ListElement* bottomList)
 
         if (listA > listB)
         {
-            return 2;
+            return BOTTOM_LIST_BIGGER;
         }
 
-        if (CompareCharByChar(topList, bottomList) == 2)
+        //when lists are negative "bigger" numerical value is smaller number
+        if (CompareCharByChar(topList, bottomList) == BOTTOM_LIST_BIGGER)
         {
             return TOP_LIST_BIGGER;
         }
         else if (CompareCharByChar(topList, bottomList) == TOP_LIST_BIGGER)
         {
-            return 2;
+            return BOTTOM_LIST_BIGGER;
         }
         else
         {
-            return 3;
+            return LISTS_EQUAL;
         }
     }
 
 }
 
-//remove two list if bottom is non zero jump to instrction number of first list content
-void instructionJump(Stack* Stack)
+//give code of which list is bigger, accordingly to the defined constanst
+int returnCompareCode(Stack* Stack)
 {
-    //get number from first list
-    int replacer = readListToInt(Stack);
+    if (compareTwoListsMainError(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList, Stack) != LIST_COMPARE_NO_ERRORS)
+    {
+        return compareTwoListsMainError(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList, Stack);
+    }
+    //if lists are "normal", do the normal comparison
+    else
+    {
+        //clean lists -> remove leading zeroes
+        deleteZeroesMain(Stack->top_ptr->value.startOfList);
+        deleteZeroesMain(Stack->top_ptr->previous_element->value.startOfList);
+
+        return compareTwoListsMain(Stack->top_ptr->value.startOfList, Stack->top_ptr->previous_element->value.startOfList);
+    }
+}
+
+//can this be made into int -> then this is final helper
+//compare '=' and greater '<' returns values only prior to that
+void compareCommand(Stack* Stack)
+{
+    if (returnCompareCode(Stack) == 3)
+    {
+        pop(Stack);
+        pop(Stack);
+        push(Stack);
+        appendOnList('1', Stack);
+    }
+    else
+    {
+        pop(Stack);
+        pop(Stack);
+        push(Stack);
+        appendOnList('0', Stack);
+    }
+}
+
+// if top is bigger than bellow, push 1, else push 0 [<]
+void lessThan(Stack* Stack)
+{
+    if (returnCompareCode(Stack) == 1)
+    {
+        pop(Stack);
+        pop(Stack);
+        push(Stack);
+        appendOnList('1', Stack);
+    }
+    else
+    {
+        pop(Stack);
+        pop(Stack);
+        push(Stack);
+        appendOnList('0', Stack);
+    }
+}
+
+// if bottomlist is nonzero, jump to the command equal of top list number [?]
+void conditionalJump(Stack* Stack)
+{
+    
+    //get number from first list, and delete list
+    int instructionJump = readListToInt(Stack);
     pop(Stack);
 
-    //checking if there is no jump
+    //checking if there is no jump -> empty or zero list
     if (Stack->top_ptr->value.startOfList == nullptr || isZero(Stack->top_ptr->value.startOfList))
     {
         pop(Stack);
-
         Stack->ptr_value++;
-        //break
-        //there is some error here move it ti the main for now 
+        return;
     }
 
-    //jump
+    //jump 
     pop(Stack);
-    Stack->ptr_value = replacer;
+    Stack->ptr_value = instructionJump;
 }
 
 //===========================================================================================================================================
@@ -1215,13 +1255,13 @@ void popSecondStackField(Stack* Stack)
 
 }
 
-//in case of one or two list being zero or empty, add Those lists accordingly [is this needed?] [maybe only the empty lists]    
+//in case of one or two list being zero or empty, add Those lists accordingly [maybe only the empty lists]    
 bool plusCommandErrorHandling(Stack* Stack)
 {
-    //[cleaning] look at it for 5 seconds maybe zeroes are not needed at least
-    // //test on stos ofc
+    ListElement* TopList = Stack->top_ptr->value.startOfList;
+    ListElement* BottomList = Stack->top_ptr->previous_element->value.startOfList;
     //case 1 both lists are empty
-    if (Stack->top_ptr->value.startOfList == nullptr && Stack->top_ptr->previous_element->value.startOfList == nullptr)
+    if (TopList == nullptr && BottomList == nullptr)
     {
         //multiplication of two lists will be one empty list, we just need to delete one
         pop(Stack);
@@ -1229,7 +1269,7 @@ bool plusCommandErrorHandling(Stack* Stack)
     }
 
     //case 2: top list is empty
-    if (Stack->top_ptr->value.startOfList == nullptr && Stack->top_ptr->previous_element->value.startOfList != nullptr)
+    if (TopList == nullptr && BottomList != nullptr)
     {
         //delete top list, bottom one is result
         pop(Stack);
@@ -1237,14 +1277,14 @@ bool plusCommandErrorHandling(Stack* Stack)
     }
 
     //case 3: bottom list is empty
-    if (Stack->top_ptr->value.startOfList != nullptr && Stack->top_ptr->previous_element->value.startOfList == nullptr)
+    if (TopList != nullptr && BottomList == nullptr)
     {
         popSecondStackField(Stack);
         return true;
     }
 
     //case 4: both lists are zero
-    if ((isZero(Stack->top_ptr->value.startOfList) == 1) && (isZero(Stack->top_ptr->previous_element->value.startOfList) == 1))
+    if ((isZero(TopList) == 1) && (isZero(BottomList) == 1))
     {
         //adding two empty lists will be empty list
         pop(Stack);
@@ -1252,7 +1292,7 @@ bool plusCommandErrorHandling(Stack* Stack)
     }
 
     //case 5: top list is zero
-    if ((isZero(Stack->top_ptr->value.startOfList) == 1) && (isZero(Stack->top_ptr->previous_element->value.startOfList) == 0))
+    if ((isZero(TopList) == 1) && (isZero(BottomList) == 0))
     {
         //adding two empty lists will be empty list
         pop(Stack);
@@ -1260,7 +1300,7 @@ bool plusCommandErrorHandling(Stack* Stack)
     }
 
     //case 6: bottom list is zero
-    if ((isZero(Stack->top_ptr->value.startOfList) == 0) && (isZero(Stack->top_ptr->previous_element->value.startOfList) == 1))
+    if ((isZero(TopList) == 0) && (isZero(BottomList) == 1))
     {
         //adding two empty lists will be empty list
         popSecondStackField(Stack);
@@ -1333,8 +1373,6 @@ void addingPositives(ListElement* biggerList, ListElement* smallerList, int carr
         if (carry)
         {
             carryHandleBiggerList(biggerList->nextListItem, carry);
-            //helper function: 99% needed
-            //biggerList->nextListItem->value = carry + 48; //nah wont be working
         }
 
         return;
@@ -1463,9 +1501,6 @@ void handlesubtraction(Stack* Stack)
 
 
 //add two list from top of the stack [main] [+]
-//notes for future optimalisation:
-//error handle for zeroes might be not needed if everything works
-//but check adding 0, 0- to positive and negative numbers
 void addStackTopLists(Stack* Stack)
 {
     //error handling -> adding of zero and empty lists
@@ -1474,7 +1509,7 @@ void addStackTopLists(Stack* Stack)
             return;
     }
 
-    //clean the data -> remove last minuses
+    //clean the data -> remove last ZEROES
     deleteZeroesMain(Stack->top_ptr->value.startOfList);
     deleteZeroesMain(Stack->top_ptr->previous_element->value.startOfList);
 
@@ -1509,10 +1544,6 @@ void addStackTopLists(Stack* Stack)
     }
 
     //case 2: "adding" two negative numbers
-    //important -> do the comparison after the changing or change the bigger smaller
-    //one is cleaner [!!!] bug!
-    //second one more efficient
-    //for now we changed , seek online which better, add coments
     if ((isNegative(Stack->top_ptr->value.startOfList) == 1) && (isNegative(Stack->top_ptr->previous_element->value.startOfList) == 1))
     {
         //step one remove minuses
@@ -1547,19 +1578,18 @@ int main()
     //initialize stack
     Stack Stack;
     initializeStack(&Stack);
+
     //loading all program instructions
     cin >> Stack.program_mem;
 
     //iterating through all program instructions
     while (Stack.mem_ptr[Stack.ptr_value] != '\0')
     {
-        
         switch (Stack.mem_ptr[Stack.ptr_value])
         {
             case '\'':
             {
                 push(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
@@ -1568,259 +1598,122 @@ int main()
                 int stackCpy = 0; 
                 StackField* currentStackField = Stack.top_ptr;
                 show(currentStackField, stackCpy, &Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case ':':
             {
                 copyStackTop(&Stack);
-
-                Stack.ptr_value++;
                 break;
             }
 
             case ';':
             {
                 switchLists(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case ',':
             {
                 pop(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '@':
             {
                 popAndSwitch(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '.':
             {
                 readAndAppend(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '^':
             {
-                absoluteValue(Stack.top_ptr->value.startOfList, &Stack.top_ptr->value, &Stack); //error
-                Stack.ptr_value++;
+                absoluteValue(Stack.top_ptr->value.startOfList, &Stack.top_ptr->value, &Stack);
                 break;
             }
 
             case '-':
             {
                 negate(Stack.top_ptr->value.startOfList, &Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '>':
             {
                 printAndDelete(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '$':
             {
                 detachAndAppend(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case ']':
             {
                 readNumToChar(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '[':
             {
                 readCharToNum(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '#':
             {
                 reAttach(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '~':
             {
                 putPtrValueOnStack(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
             case '!':
             {
                 logicalNegation(&Stack);
-                Stack.ptr_value++;
                 break;
             }
 
-            //very easily new function [cleaning]
             case '=':
             {
-                
-                if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) != 10)
-                {
-                    if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) == 3)
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('1', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                    else
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('0', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                }
-                else 
-                {
-                    //clean lists
-                    deleteZeroesMain(Stack.top_ptr->value.startOfList);
-                    deleteZeroesMain(Stack.top_ptr->previous_element->value.startOfList);
-
-                    if (compareTwoListsMain(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList) == 3)
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('1', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                    else
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('0', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                }
-                    
-                
-
-                Stack.ptr_value++;
+                compareCommand(&Stack);
                 break;
-
-
             }
 
-            //very easily new function [cleaning]
             case '<':
             {
-                if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) != 10)
-                {
-                    if (compareTwoListsMainError(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList, &Stack) == TOP_LIST_BIGGER)
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('1', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                    else
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('0', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                }
-                else
-                {
-                    //clean lists
-                    deleteZeroesMain(Stack.top_ptr->value.startOfList);
-                    deleteZeroesMain(Stack.top_ptr->previous_element->value.startOfList);
-
-                    if (compareTwoListsMain(Stack.top_ptr->value.startOfList, Stack.top_ptr->previous_element->value.startOfList) == TOP_LIST_BIGGER)
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('1', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                    else
-                    {
-                        pop(&Stack);
-                        pop(&Stack);
-                        push(&Stack);
-                        appendOnList('0', &Stack);
-                        Stack.ptr_value++;
-                        break;
-                    }
-                }
-
-
-
-                Stack.ptr_value++;
+                lessThan(&Stack);
                 break;
             }
 
             case '?':
             {
-                //instructionJump(&Stack);
-                //get number from first list
-                int replacer = readListToInt(&Stack);
-                pop(&Stack);
-
-                //checking if there is no jump
-                if (Stack.top_ptr->value.startOfList == nullptr || isZero(Stack.top_ptr->value.startOfList))
-                {
-                    pop(&Stack);
-
-                    Stack.ptr_value++;
-                    break;
-                    //there is some error here move it ti the main for now 
-                }
-
-                //jump
-                pop(&Stack);
-                Stack.ptr_value = replacer;
-                break;
+                conditionalJump(&Stack);
+                continue;
             }
 
             case '+':
             {
                 addStackTopLists(&Stack);
-                Stack.ptr_value++;
                 break;
             }
             default:
             {
                 appendOnList(Stack.mem_ptr[Stack.ptr_value], &Stack);
-                Stack.ptr_value++;
                 break;
             }
         }
+    Stack.ptr_value++;
     }
 }
